@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>HT SEAPRO - ĐIỂM DANH</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #0b0f17;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 25px 0 10px;
+      color: #1683ff;
+      font-size: 30px;
+    }
+
+    .subtitle {
+      color: #aaa;
+      margin-bottom: 20px;
+    }
+
+    .camera-box {
+      width: 92%;
+      max-width: 700px;
+      margin: auto;
+      background: #000;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    video {
+      width: 100%;
+      display: block;
+      transform: scaleX(-1);
+    }
+
+    #status {
+      margin: 20px;
+      font-size: 18px;
+      min-height: 30px;
+    }
+
+    button {
+      padding: 15px 35px;
+      border: 0;
+      border-radius: 12px;
+      background: #0066ff;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1683ff;
+    }
+
+    .ok {
+      color: #00e676;
+    }
+
+    .error {
+      color: #ff5252;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>HT SEAPRO</h1>
+
+  <div class="subtitle">
+    HỆ THỐNG ĐIỂM DANH NHẬN DIỆN KHUÔN MẶT
+  </div>
+
+  <div class="camera-box">
+    <video id="camera" autoplay playsinline></video>
+  </div>
+
+  <div id="status">
+    Đang chờ bật camera...
+  </div>
+
+  <button onclick="startCamera()">
+    📷 BẬT CAMERA
+  </button>
+
+  <script>
+
+    async function startCamera() {
+
+      const video = document.getElementById("camera");
+      const status = document.getElementById("status");
+
+      status.textContent = "⏳ Đang mở camera...";
+      status.className = "";
+
+      try {
+
+        const stream =
+          await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: "user",
+              width: {
+                ideal: 1280
+              },
+              height: {
+                ideal: 720
+              }
+            },
+            audio: false
+          });
+
+        video.srcObject = stream;
+
+        status.textContent =
+          "✅ CAMERA ĐANG HOẠT ĐỘNG";
+
+        status.className = "ok";
+
+      } catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+          "❌ KHÔNG THỂ MỞ CAMERA: " + error.message;
+
+        status.className = "error";
+      }
+    }
+
+  </script>
+
+</body>
+</html>
