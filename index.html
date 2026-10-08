@@ -1,1427 +1,1299 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-
 <meta charset="UTF-8">
-
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HT SEAPRO - FACE ID</title>
 
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.0/dist/ort.min.js"></script>
 
 <style>
-
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 body {
-    margin: 0;
-    background: #0b0f17;
-    color: white;
-    font-family: Arial, sans-serif;
-    text-align: center;
+  margin: 0;
+  background: #0b0f17;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
 }
 
 h1 {
-    margin: 25px 0 8px;
-    color: #1683ff;
-    font-size: 30px;
+  margin: 25px 0 5px;
+  color: #1683ff;
+  font-size: 30px;
 }
 
 .subtitle {
-    color: #aaa;
-    margin-bottom: 20px;
+  color: #bbb;
+  font-size: 18px;
+  margin-bottom: 25px;
 }
 
-.camera-box {
-    position: relative;
-    width: 92%;
-    max-width: 760px;
-    margin: auto;
-    background: #000;
-    border-radius: 20px;
-    overflow: hidden;
+.camera-wrap {
+  width: min(90vw, 840px);
+  margin: auto;
+  position: relative;
 }
 
 video {
-    width: 100%;
-    display: block;
-    transform: scaleX(-1);
+  width: 100%;
+  display: block;
+  border-radius: 20px;
+  background: black;
+  transform: scaleX(-1);
 }
 
 canvas {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    transform: scaleX(-1);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform: scaleX(-1);
 }
 
-#status {
-    margin: 20px;
-    min-height: 30px;
-    font-size: 18px;
+.status {
+  margin: 20px auto;
+  font-size: 21px;
+  color: #00ff66;
 }
 
-.ok {
-    color: #00e676;
-}
-
-.error {
-    color: #ff5252;
-}
-
-.info {
-    color: #ffd54f;
+.result {
+  width: min(90vw, 840px);
+  margin: 15px auto;
+  padding: 18px;
+  border-radius: 15px;
+  background: #111827;
+  font-size: 18px;
+  min-height: 60px;
 }
 
 button {
-    padding: 15px 35px;
-    border: 0;
-    border-radius: 12px;
-    background: #0066ff;
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
+  border: 0;
+  border-radius: 12px;
+  padding: 15px 35px;
+  background: #087cff;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 button:hover {
-    background: #1683ff;
+  background: #0065d8;
 }
 
+.small {
+  color: #888;
+  font-size: 13px;
+  margin-top: 10px;
+}
 </style>
-
 </head>
 
 <body>
 
 <h1>HT SEAPRO</h1>
-
 <div class="subtitle">
 HỆ THỐNG ĐIỂM DANH NHẬN DIỆN KHUÔN MẶT
 </div>
 
-<div class="camera-box">
-
-    <video
-        id="camera"
-        autoplay
-        playsinline>
-    </video>
-
-    <canvas id="overlay"></canvas>
-
+<div class="camera-wrap">
+  <video id="video" autoplay playsinline></video>
+  <canvas id="overlay"></canvas>
 </div>
 
-<div id="status" class="info">
-⏳ Sẵn sàng
+<div id="status" class="status">
+Đang khởi động...
 </div>
 
-<button onclick="startSystem()">
+<div id="result" class="result">
+Đang tải hệ thống AI...
+</div>
+
+<button id="startBtn" onclick="startCamera()">
 📷 BẬT CAMERA
 </button>
 
+<div class="small">
+SCRFD + ArcFace / InsightFace
+</div>
 
 <script>
 
-/* =====================================================
-   CONFIG
-===================================================== */
-
-const MODEL_PATH =
-    "./model/scrfd_500m_bnkps.onnx";
+const SCRFD_MODEL = "./model/scrfd_500m_bnkps.onnx";
+const ARCFACE_MODEL = "./model/w600k_mbf.onnx";
 
 const INPUT_SIZE = 640;
 
 const DET_THRESHOLD = 0.50;
-
 const NMS_THRESHOLD = 0.40;
 
 const STRIDES = [8, 16, 32];
 
+let scrfdSession = null;
+let arcfaceSession = null;
 
-/* =====================================================
-   GLOBAL
-===================================================== */
-
-let video = null;
-
-let canvas = null;
-
-let ctx = null;
-
-let session = null;
+let video = document.getElementById("video");
+let canvas = document.getElementById("overlay");
+let ctx = canvas.getContext("2d");
 
 let running = false;
+let processing = false;
 
 
-/* =====================================================
-   STATUS
-===================================================== */
+// =====================================================
+// KHỞI TẠO AI
+// =====================================================
 
-function setStatus(text, type = "info") {
+async function loadModels() {
 
-    const el =
-        document.getElementById("status");
+  try {
 
-    el.textContent = text;
-
-    el.className = type;
-
-}
-
-
-/* =====================================================
-   CAMERA
-===================================================== */
-
-async function startCamera() {
-
-    video =
-        document.getElementById("camera");
-
-    const stream =
-        await navigator.mediaDevices.getUserMedia({
-
-            video: {
-                facingMode: "user",
-
-                width: {
-                    ideal: 1280
-                },
-
-                height: {
-                    ideal: 720
-                }
-            },
-
-            audio: false
-
-        });
-
-
-    video.srcObject = stream;
-
-
-    await new Promise(resolve => {
-
-        video.onloadedmetadata = resolve;
-
-    });
-
-
-    await video.play();
-
-
-    canvas =
-        document.getElementById("overlay");
-
-
-    canvas.width =
-        video.videoWidth;
-
-
-    canvas.height =
-        video.videoHeight;
-
-
-    ctx =
-        canvas.getContext("2d");
-
-
-    console.log(
-        "CAMERA:",
-        video.videoWidth,
-        "x",
-        video.videoHeight
-    );
-
-}
-
-
-/* =====================================================
-   LOAD MODEL
-===================================================== */
-
-async function loadModel() {
-
-    setStatus(
-        "⏳ Đang tải SCRFD 500M KPS...",
-        "info"
-    );
-
+    document.getElementById("status").innerText =
+      "⏳ ĐANG TẢI SCRFD...";
 
     ort.env.wasm.numThreads = 1;
 
+    scrfdSession = await ort.InferenceSession.create(
+      SCRFD_MODEL,
+      {
+        executionProviders: ["wasm"]
+      }
+    );
 
-    session =
-        await ort.InferenceSession.create(
-
-            MODEL_PATH,
-
-            {
-                executionProviders: [
-                    "wasm"
-                ]
-            }
-
-        );
+    console.log("SCRFD INPUT:", scrfdSession.inputNames);
+    console.log("SCRFD OUTPUT:", scrfdSession.outputNames);
 
 
-    console.log(
-        "=============================="
+    document.getElementById("status").innerText =
+      "⏳ ĐANG TẢI ARCFACE...";
+
+
+    arcfaceSession = await ort.InferenceSession.create(
+      ARCFACE_MODEL,
+      {
+        executionProviders: ["wasm"]
+      }
     );
 
     console.log(
-        "SCRFD INPUT:",
-        session.inputNames
+      "ARCFACE INPUT:",
+      arcfaceSession.inputNames
     );
 
     console.log(
-        "SCRFD OUTPUT:",
-        session.outputNames
-    );
-
-    console.log(
-        "=============================="
+      "ARCFACE OUTPUT:",
+      arcfaceSession.outputNames
     );
 
 
-    setStatus(
-        "✅ SCRFD ĐÃ TẢI",
-        "ok"
-    );
+    document.getElementById("status").innerText =
+      "✅ AI ĐÃ SẴN SÀNG";
 
+    document.getElementById("result").innerHTML =
+      "SCRFD: <b>OK</b><br>" +
+      "ArcFace: <b>OK</b>";
+
+  } catch (error) {
+
+    console.error(error);
+
+    document.getElementById("status").innerText =
+      "❌ LỖI TẢI AI";
+
+    document.getElementById("result").innerText =
+      error.message;
+  }
 }
 
 
-/* =====================================================
-   LETTERBOX IMAGE
-===================================================== */
+// =====================================================
+// CAMERA
+// =====================================================
 
-function createInput() {
+async function startCamera() {
 
-    const sourceW =
-        video.videoWidth;
+  try {
 
-    const sourceH =
-        video.videoHeight;
-
-
-    const scale =
-        Math.min(
-            INPUT_SIZE / sourceW,
-            INPUT_SIZE / sourceH
-        );
-
-
-    const resizedW =
-        Math.round(sourceW * scale);
-
-    const resizedH =
-        Math.round(sourceH * scale);
-
-
-    const padX =
-        Math.floor(
-            (INPUT_SIZE - resizedW) / 2
-        );
-
-    const padY =
-        Math.floor(
-            (INPUT_SIZE - resizedH) / 2
-        );
-
-
-    const temp =
-        document.createElement("canvas");
-
-
-    temp.width =
-        INPUT_SIZE;
-
-    temp.height =
-        INPUT_SIZE;
-
-
-    const tctx =
-        temp.getContext("2d");
-
-
-    /*
-       Nền đen
-    */
-
-    tctx.fillStyle = "black";
-
-    tctx.fillRect(
-        0,
-        0,
-        INPUT_SIZE,
-        INPUT_SIZE
-    );
-
-
-    /*
-       Giữ đúng tỷ lệ camera
-    */
-
-    tctx.drawImage(
-
-        video,
-
-        0,
-        0,
-        sourceW,
-        sourceH,
-
-        padX,
-        padY,
-        resizedW,
-        resizedH
-
-    );
-
-
-    const image =
-        tctx.getImageData(
-            0,
-            0,
-            INPUT_SIZE,
-            INPUT_SIZE
-        );
-
-
-    const area =
-        INPUT_SIZE * INPUT_SIZE;
-
-
-    const data =
-        new Float32Array(
-            3 * area
-        );
-
-
-    /*
-       SCRFD:
-       (RGB - 127.5) / 128
-    */
-
-    for (
-        let i = 0;
-        i < area;
-        i++
-    ) {
-
-        const r =
-            image.data[i * 4];
-
-        const g =
-            image.data[i * 4 + 1];
-
-        const b =
-            image.data[i * 4 + 2];
-
-
-        data[i] =
-            (r - 127.5) / 128.0;
-
-
-        data[area + i] =
-            (g - 127.5) / 128.0;
-
-
-        data[2 * area + i] =
-            (b - 127.5) / 128.0;
-
+    if (!scrfdSession || !arcfaceSession) {
+      await loadModels();
     }
 
+    const stream =
+      await navigator.mediaDevices.getUserMedia({
 
-    return {
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
 
-        tensor:
-            new ort.Tensor(
-                "float32",
-                data,
-                [
-                    1,
-                    3,
-                    INPUT_SIZE,
-                    INPUT_SIZE
-                ]
-            ),
+        audio: false
+      });
 
-        scale,
-        padX,
-        padY
+    video.srcObject = stream;
 
-    };
+    await video.play();
 
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    running = true;
+
+    document.getElementById("startBtn").style.display =
+      "none";
+
+    document.getElementById("status").innerText =
+      "🔍 ĐANG QUÉT KHUÔN MẶT...";
+
+    requestAnimationFrame(processFrame);
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Không thể mở camera.\n\n" +
+      error.message
+    );
+  }
 }
 
 
-/* =====================================================
-   GET OUTPUT
-===================================================== */
+// =====================================================
+// LETTERBOX 640x640
+// =====================================================
+
+function makeInput(video) {
+
+  const canvas2 = document.createElement("canvas");
+
+  canvas2.width = INPUT_SIZE;
+  canvas2.height = INPUT_SIZE;
+
+  const c = canvas2.getContext("2d");
+
+  c.fillStyle = "black";
+  c.fillRect(
+    0,
+    0,
+    INPUT_SIZE,
+    INPUT_SIZE
+  );
+
+  const scale = Math.min(
+    INPUT_SIZE / video.videoWidth,
+    INPUT_SIZE / video.videoHeight
+  );
+
+  const w = video.videoWidth * scale;
+  const h = video.videoHeight * scale;
+
+  const dx = (INPUT_SIZE - w) / 2;
+  const dy = (INPUT_SIZE - h) / 2;
+
+  c.drawImage(
+    video,
+    dx,
+    dy,
+    w,
+    h
+  );
+
+  return {
+    canvas: canvas2,
+    scale: scale,
+    dx: dx,
+    dy: dy
+  };
+}
+
+
+// =====================================================
+// CANVAS → TENSOR SCRFD
+// =====================================================
+
+function canvasToTensor(canvas2) {
+
+  const c =
+    canvas2.getContext("2d");
+
+  const image =
+    c.getImageData(
+      0,
+      0,
+      INPUT_SIZE,
+      INPUT_SIZE
+    );
+
+  const data =
+    new Float32Array(
+      3 * INPUT_SIZE * INPUT_SIZE
+    );
+
+  let p = 0;
+
+  for (let y = 0; y < INPUT_SIZE; y++) {
+
+    for (let x = 0; x < INPUT_SIZE; x++) {
+
+      const i =
+        (y * INPUT_SIZE + x) * 4;
+
+      const r = image.data[i];
+      const g = image.data[i + 1];
+      const b = image.data[i + 2];
+
+      data[p] =
+        (r - 127.5) / 128;
+
+      data[
+        INPUT_SIZE * INPUT_SIZE + p
+      ] =
+        (g - 127.5) / 128;
+
+      data[
+        2 * INPUT_SIZE * INPUT_SIZE + p
+      ] =
+        (b - 127.5) / 128;
+
+      p++;
+    }
+  }
+
+  return new ort.Tensor(
+    "float32",
+    data,
+    [1, 3, INPUT_SIZE, INPUT_SIZE]
+  );
+}
+
+
+// =====================================================
+// LẤY OUTPUT
+// =====================================================
 
 function getOutput(outputs, name) {
 
-    if (outputs[name]) {
-        return outputs[name];
-    }
+  if (outputs[name]) {
+    return outputs[name];
+  }
 
+  const key =
+    Object.keys(outputs)
+      .find(
+        x =>
+          x.toLowerCase() ===
+          name.toLowerCase()
+      );
 
-    const found =
-        Object.keys(outputs).find(
-            key =>
-                key.toLowerCase() ===
-                name.toLowerCase()
-        );
-
-
-    if (found) {
-        return outputs[found];
-    }
-
-
-    return null;
-
+  return key
+    ? outputs[key]
+    : null;
 }
 
 
-/* =====================================================
-   SIGMOID
-===================================================== */
+// =====================================================
+// SCRFD DECODE
+// =====================================================
 
-function sigmoid(x) {
-
-    return 1 /
-        (1 + Math.exp(-x));
-
-}
-
-
-/* =====================================================
-   FLATTEN OUTPUT
-===================================================== */
-
-function getArray(tensor) {
-
-    return tensor.data;
-
-}
-
-
-/* =====================================================
-   DECODE SCRFD
-===================================================== */
-
-function decodeStride(
-    scoreTensor,
-    bboxTensor,
-    kpsTensor,
-    stride
+function decodeLayer(
+  scoreTensor,
+  bboxTensor,
+  kpsTensor,
+  stride
 ) {
 
-    if (
-        !scoreTensor ||
-        !bboxTensor
-    ) {
+  const scores = scoreTensor.data;
+  const bbox = bboxTensor.data;
+  const kps = kpsTensor.data;
 
-        return [];
+  const H = scoreTensor.dims[2];
+  const W = scoreTensor.dims[3];
 
-    }
+  const results = [];
 
+  const area = H * W;
 
-    const scores =
-        getArray(scoreTensor);
+  for (let y = 0; y < H; y++) {
 
-    const boxes =
-        getArray(bboxTensor);
+    for (let x = 0; x < W; x++) {
 
+      for (let a = 0; a < 2; a++) {
 
-    const kps =
-        kpsTensor
-            ? getArray(kpsTensor)
-            : null;
+        const index =
+          a * area +
+          y * W +
+          x;
 
+        const score =
+          scores[index];
 
-    const dims =
-        scoreTensor.dims;
-
-
-    console.log(
-        "STRIDE",
-        stride,
-        "SCORE DIMS",
-        dims
-    );
-
-
-    /*
-       Với SCRFD 640:
-
-       stride 8  = 80 x 80
-       stride 16 = 40 x 40
-       stride 32 = 20 x 20
-
-       2 anchors / location
-    */
-
-    const grid =
-        INPUT_SIZE / stride;
-
-    const numAnchors = 2;
-
-
-    const faces = [];
-
-
-    /*
-       Output chuẩn thường:
-
-       score:
-       [1, 2, H, W]
-
-       bbox:
-       [1, 8, H, W]
-
-       kps:
-       [1, 20, H, W]
-    */
-
-    for (
-        let y = 0;
-        y < grid;
-        y++
-    ) {
-
-        for (
-            let x = 0;
-            x < grid;
-            x++
-        ) {
-
-            for (
-                let a = 0;
-                a < numAnchors;
-                a++
-            ) {
-
-                const index =
-                    (
-                        a * grid * grid
-                    ) +
-                    (
-                        y * grid + x
-                    );
-
-
-                let score =
-                    scores[index];
-
-
-                /*
-                   Một số export đã sigmoid,
-                   một số chưa.
-                */
-
-                if (
-                    score < 0 ||
-                    score > 1
-                ) {
-
-                    score =
-                        sigmoid(score);
-
-                }
-
-
-                if (
-                    score < DET_THRESHOLD
-                ) {
-
-                    continue;
-
-                }
-
-
-                /*
-                   Anchor center
-                */
-
-                const cx =
-                    (x + 0.5) *
-                    stride;
-
-                const cy =
-                    (y + 0.5) *
-                    stride;
-
-
-                /*
-                   bbox channels:
-
-                   anchor 0:
-                   0,1,2,3
-
-                   anchor 1:
-                   4,5,6,7
-                */
-
-                const bboxBase =
-                    (
-                        a * 4
-                    ) *
-                    grid *
-                    grid;
-
-
-                const dx =
-                    boxes[
-                        bboxBase +
-                        index
-                    ] * stride;
-
-
-                const dy =
-                    boxes[
-                        bboxBase +
-                        grid * grid +
-                        index
-                    ] * stride;
-
-
-                const dw =
-                    boxes[
-                        bboxBase +
-                        2 * grid * grid +
-                        index
-                    ] * stride;
-
-
-                const dh =
-                    boxes[
-                        bboxBase +
-                        3 * grid * grid +
-                        index
-                    ] * stride;
-
-
-                const x1 =
-                    cx - dx;
-
-                const y1 =
-                    cy - dy;
-
-                const x2 =
-                    cx + dw;
-
-                const y2 =
-                    cy + dh;
-
-
-                let keypoints =
-                    null;
-
-
-                /*
-                   KPS:
-                   5 điểm
-
-                   left eye
-                   right eye
-                   nose
-                   left mouth
-                   right mouth
-                */
-
-                if (kps) {
-
-                    keypoints = [];
-
-
-                    const kpsBase =
-                        (
-                            a * 10
-                        ) *
-                        grid *
-                        grid;
-
-
-                    for (
-                        let p = 0;
-                        p < 5;
-                        p++
-                    ) {
-
-                        const px =
-                            cx +
-                            kps[
-                                kpsBase +
-                                (
-                                    p * 2
-                                ) *
-                                grid *
-                                grid +
-                                index
-                            ] *
-                            stride;
-
-
-                        const py =
-                            cy +
-                            kps[
-                                kpsBase +
-                                (
-                                    p * 2 + 1
-                                ) *
-                                grid *
-                                grid +
-                                index
-                            ] *
-                            stride;
-
-
-                        keypoints.push({
-                            x: px,
-                            y: py
-                        });
-
-                    }
-
-                }
-
-
-                faces.push({
-
-                    x1,
-                    y1,
-                    x2,
-                    y2,
-
-                    score,
-
-                    keypoints
-
-                });
-
-            }
-
+        if (score < DET_THRESHOLD) {
+          continue;
         }
 
+        const cx =
+          (x + 0.5) * stride;
+
+        const cy =
+          (y + 0.5) * stride;
+
+
+        const base =
+          a * 4 * area +
+          y * W +
+          x;
+
+
+        const l =
+          bbox[base] * stride;
+
+        const t =
+          bbox[base + area] * stride;
+
+        const r =
+          bbox[base + 2 * area] * stride;
+
+        const b =
+          bbox[base + 3 * area] * stride;
+
+
+        const x1 = cx - l;
+        const y1 = cy - t;
+        const x2 = cx + r;
+        const y2 = cy + b;
+
+
+        const kpBase =
+          a * 10 * area +
+          y * W +
+          x;
+
+        const points = [];
+
+        for (let k = 0; k < 5; k++) {
+
+          const px =
+            cx +
+            kps[
+              kpBase +
+              (k * 2) * area
+            ] * stride;
+
+          const py =
+            cy +
+            kps[
+              kpBase +
+              (k * 2 + 1) * area
+            ] * stride;
+
+          points.push({
+            x: px,
+            y: py
+          });
+        }
+
+
+        results.push({
+          score,
+          x1,
+          y1,
+          x2,
+          y2,
+          points
+        });
+      }
     }
+  }
 
-
-    return faces;
-
+  return results;
 }
 
 
-/* =====================================================
-   IOU
-===================================================== */
+// =====================================================
+// IOU
+// =====================================================
 
 function iou(a, b) {
 
-    const x1 =
-        Math.max(
-            a.x1,
-            b.x1
-        );
+  const x1 =
+    Math.max(a.x1, b.x1);
 
-    const y1 =
-        Math.max(
-            a.y1,
-            b.y1
-        );
+  const y1 =
+    Math.max(a.y1, b.y1);
 
-    const x2 =
-        Math.min(
-            a.x2,
-            b.x2
-        );
+  const x2 =
+    Math.min(a.x2, b.x2);
 
-    const y2 =
-        Math.min(
-            a.y2,
-            b.y2
-        );
+  const y2 =
+    Math.min(a.y2, b.y2);
 
+  const w =
+    Math.max(0, x2 - x1);
 
-    const w =
-        Math.max(
-            0,
-            x2 - x1
-        );
+  const h =
+    Math.max(0, y2 - y1);
 
+  const inter = w * h;
 
-    const h =
-        Math.max(
-            0,
-            y2 - y1
-        );
+  const areaA =
+    (a.x2 - a.x1) *
+    (a.y2 - a.y1);
 
+  const areaB =
+    (b.x2 - b.x1) *
+    (b.y2 - b.y1);
 
-    const inter =
-        w * h;
-
-
-    const areaA =
-        (
-            a.x2 - a.x1
-        ) *
-        (
-            a.y2 - a.y1
-        );
-
-
-    const areaB =
-        (
-            b.x2 - b.x1
-        ) *
-        (
-            b.y2 - b.y1
-        );
-
-
-    return (
-        inter /
-        (
-            areaA +
-            areaB -
-            inter +
-            1e-6
-        )
-    );
-
+  return inter /
+    (areaA + areaB - inter + 1e-6);
 }
 
 
-/* =====================================================
-   NMS
-===================================================== */
+// =====================================================
+// NMS
+// =====================================================
 
-function nms(faces) {
+function nms(boxes) {
 
-    faces.sort(
-        (a, b) =>
-            b.score - a.score
-    );
+  boxes.sort(
+    (a, b) =>
+      b.score - a.score
+  );
 
+  const result = [];
 
-    const result = [];
+  while (boxes.length) {
 
+    const best =
+      boxes.shift();
 
-    while (
-        faces.length
-    ) {
+    result.push(best);
 
-        const best =
-            faces.shift();
+    boxes =
+      boxes.filter(
+        b =>
+          iou(best, b)
+          < NMS_THRESHOLD
+      );
+  }
 
-
-        result.push(best);
-
-
-        faces =
-            faces.filter(
-                face =>
-                    iou(
-                        best,
-                        face
-                    ) <
-                    NMS_THRESHOLD
-            );
-
-    }
-
-
-    return result;
-
+  return result;
 }
 
 
-/* =====================================================
-   CONVERT COORDINATES
-===================================================== */
+// =====================================================
+// SCRFD DETECTION
+// =====================================================
 
-function convertFace(
-    face,
-    scale,
-    padX,
-    padY
-) {
+async function detectFace() {
 
-    const result = {
+  const inputInfo =
+    makeInput(video);
 
-        x1:
-            (
-                face.x1 -
-                padX
-            ) / scale,
+  const tensor =
+    canvasToTensor(
+      inputInfo.canvas
+    );
 
-        y1:
-            (
-                face.y1 -
-                padY
-            ) / scale,
+  const inputName =
+    scrfdSession.inputNames[0];
 
-        x2:
-            (
-                face.x2 -
-                padX
-            ) / scale,
+  const outputs =
+    await scrfdSession.run({
+      [inputName]: tensor
+    });
 
-        y2:
-            (
-                face.y2 -
-                padY
-            ) / scale,
 
-        score:
-            face.score,
+  const all = [];
 
-        keypoints:
-            []
+  for (const stride of STRIDES) {
 
-    };
+    const score =
+      getOutput(
+        outputs,
+        "score_" + stride
+      );
 
+    const bbox =
+      getOutput(
+        outputs,
+        "bbox_" + stride
+      );
+
+    const kps =
+      getOutput(
+        outputs,
+        "kps_" + stride
+      );
 
     if (
-        face.keypoints
+      score &&
+      bbox &&
+      kps
     ) {
 
-        result.keypoints =
-            face.keypoints.map(
-                point => ({
-
-                    x:
-                        (
-                            point.x -
-                            padX
-                        ) / scale,
-
-                    y:
-                        (
-                            point.y -
-                            padY
-                        ) / scale
-
-                })
-            );
-
+      all.push(
+        ...decodeLayer(
+          score,
+          bbox,
+          kps,
+          stride
+        )
+      );
     }
+  }
 
-
-    return result;
-
+  return {
+    faces: nms(all),
+    inputInfo
+  };
 }
 
 
-/* =====================================================
-   DRAW
-===================================================== */
+// =====================================================
+// CROP + ALIGN KHUÔN MẶT
+// =====================================================
 
-function drawFaces(faces) {
+function cropAlignedFace(
+  face,
+  inputInfo
+) {
 
-    ctx.clearRect(
+  const src =
+    inputInfo.canvas;
+
+  const p =
+    face.points;
+
+  if (!p || p.length < 5) {
+    return null;
+  }
+
+
+  /*
+    5 điểm chuẩn ArcFace 112x112
+
+    mắt trái
+    mắt phải
+    mũi
+    miệng trái
+    miệng phải
+  */
+
+  const dst = [
+
+    { x: 38.2946, y: 51.6963 },
+    { x: 73.5318, y: 51.5014 },
+    { x: 56.0252, y: 71.7366 },
+    { x: 41.5493, y: 92.3655 },
+    { x: 70.7299, y: 92.2041 }
+
+  ];
+
+
+  /*
+    Dùng affine transform
+    dựa trên mắt trái,
+    mắt phải và mũi.
+  */
+
+  const s1 = p[0];
+  const s2 = p[1];
+  const s3 = p[2];
+
+  const d1 = dst[0];
+  const d2 = dst[1];
+  const d3 = dst[2];
+
+
+  const det =
+    s1.x * (s2.y - s3.y) +
+    s2.x * (s3.y - s1.y) +
+    s3.x * (s1.y - s2.y);
+
+
+  if (Math.abs(det) < 0.0001) {
+    return null;
+  }
+
+
+  /*
+    Tìm affine transform
+    x' = a*x + b*y + c
+    y' = d*x + e*y + f
+  */
+
+
+  function solve(values) {
+
+    const A = [
+      [s1.x, s1.y, 1],
+      [s2.x, s2.y, 1],
+      [s3.x, s3.y, 1]
+    ];
+
+    const B = values;
+
+    for (let i = 0; i < 3; i++) {
+
+      let max = i;
+
+      for (let j = i + 1; j < 3; j++) {
+
+        if (
+          Math.abs(A[j][i]) >
+          Math.abs(A[max][i])
+        ) {
+          max = j;
+        }
+      }
+
+      [
+        A[i],
+        A[max]
+      ] = [
+        A[max],
+        A[i]
+      ];
+
+      [
+        B[i],
+        B[max]
+      ] = [
+        B[max],
+        B[i]
+      ];
+
+
+      for (
+        let j = i + 1;
+        j < 3;
+        j++
+      ) {
+
+        const ratio =
+          A[j][i] /
+          A[i][i];
+
+        for (
+          let k = i;
+          k < 3;
+          k++
+        ) {
+
+          A[j][k] -=
+            ratio *
+            A[i][k];
+        }
+
+        B[j] -=
+          ratio *
+          B[i];
+      }
+    }
+
+
+    const x =
+      new Array(3);
+
+    for (
+      let i = 2;
+      i >= 0;
+      i--
+    ) {
+
+      x[i] =
+        (
+          B[i] -
+          A[i][i + 1] *
+          (x[i + 1] || 0) -
+          A[i][i + 2] *
+          (x[i + 2] || 0)
+        ) /
+        A[i][i];
+    }
+
+    return x;
+  }
+
+
+  const X =
+    solve([
+      d1.x,
+      d2.x,
+      d3.x
+    ]);
+
+  const Y =
+    solve([
+      d1.y,
+      d2.y,
+      d3.y
+    ]);
+
+
+  const out =
+    document.createElement(
+      "canvas"
+    );
+
+  out.width = 112;
+  out.height = 112;
+
+  const c =
+    out.getContext("2d");
+
+  c.fillStyle = "black";
+
+  c.fillRect(
+    0,
+    0,
+    112,
+    112
+  );
+
+
+  /*
+    Canvas transform:
+    source → destination
+  */
+
+  c.setTransform(
+    X[0],
+    Y[0],
+    X[1],
+    Y[1],
+    X[2],
+    Y[2]
+  );
+
+  c.drawImage(
+    src,
+    0,
+    0
+  );
+
+  c.setTransform(
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+  );
+
+
+  return out;
+}
+
+
+// =====================================================
+// ẢNH 112x112 → ARCFACE TENSOR
+// =====================================================
+
+function faceCanvasToTensor(faceCanvas) {
+
+  const c =
+    faceCanvas.getContext("2d");
+
+  const image =
+    c.getImageData(
+      0,
+      0,
+      112,
+      112
+    );
+
+  const size =
+    112 * 112;
+
+  const data =
+    new Float32Array(
+      size * 3
+    );
+
+  let p = 0;
+
+  for (
+    let y = 0;
+    y < 112;
+    y++
+  ) {
+
+    for (
+      let x = 0;
+      x < 112;
+      x++
+    ) {
+
+      const i =
+        (y * 112 + x) * 4;
+
+      const r =
+        image.data[i];
+
+      const g =
+        image.data[i + 1];
+
+      const b =
+        image.data[i + 2];
+
+
+      /*
+        ArcFace:
+        (RGB - 127.5) / 127.5
+      */
+
+      data[p] =
+        (r - 127.5) /
+        127.5;
+
+      data[
+        size + p
+      ] =
+        (g - 127.5) /
+        127.5;
+
+      data[
+        size * 2 + p
+      ] =
+        (b - 127.5) /
+        127.5;
+
+      p++;
+    }
+  }
+
+
+  return new ort.Tensor(
+    "float32",
+    data,
+    [1, 3, 112, 112]
+  );
+}
+
+
+// =====================================================
+// ARCFACE EMBEDDING
+// =====================================================
+
+async function createFaceEmbedding(
+  faceCanvas
+) {
+
+  const tensor =
+    faceCanvasToTensor(
+      faceCanvas
+    );
+
+  const inputName =
+    arcfaceSession.inputNames[0];
+
+  const outputs =
+    await arcfaceSession.run({
+      [inputName]: tensor
+    });
+
+
+  const outputName =
+    arcfaceSession.outputNames[0];
+
+  const embedding =
+    outputs[outputName].data;
+
+
+  /*
+    L2 NORMALIZATION
+  */
+
+  let sum = 0;
+
+  for (
+    let i = 0;
+    i < embedding.length;
+    i++
+  ) {
+
+    sum +=
+      embedding[i] *
+      embedding[i];
+  }
+
+
+  const norm =
+    Math.sqrt(sum);
+
+
+  const normalized =
+    new Float32Array(
+      embedding.length
+    );
+
+
+  for (
+    let i = 0;
+    i < embedding.length;
+    i++
+  ) {
+
+    normalized[i] =
+      embedding[i] /
+      (norm || 1);
+  }
+
+
+  return normalized;
+}
+
+
+// =====================================================
+// VẼ KHUÔN MẶT
+// =====================================================
+
+function drawFace(
+  face,
+  inputInfo
+) {
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+
+  const scale =
+    1 / inputInfo.scale;
+
+
+  const x1 =
+    (face.x1 -
+      inputInfo.dx) *
+    scale;
+
+  const y1 =
+    (face.y1 -
+      inputInfo.dy) *
+    scale;
+
+  const x2 =
+    (face.x2 -
+      inputInfo.dx) *
+    scale;
+
+  const y2 =
+    (face.y2 -
+      inputInfo.dy) *
+    scale;
+
+
+  ctx.strokeStyle =
+    "#00ff55";
+
+  ctx.lineWidth = 4;
+
+  ctx.strokeRect(
+    x1,
+    y1,
+    x2 - x1,
+    y2 - y1
+  );
+
+
+  ctx.fillStyle =
+    "#00ff55";
+
+
+  for (
+    const point of face.points
+  ) {
+
+    const px =
+      (point.x -
+        inputInfo.dx) *
+      scale;
+
+    const py =
+      (point.y -
+        inputInfo.dy) *
+      scale;
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      px,
+      py,
+      5,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+  }
+}
+
+
+// =====================================================
+// XỬ LÝ CAMERA
+// =====================================================
+
+async function processFrame() {
+
+  if (!running) {
+    return;
+  }
+
+
+  if (
+    !processing &&
+    video.readyState >= 2
+  ) {
+
+    processing = true;
+
+
+    try {
+
+      const result =
+        await detectFace();
+
+
+      ctx.clearRect(
         0,
         0,
         canvas.width,
         canvas.height
-    );
+      );
 
 
-    for (
-        const face of faces
-    ) {
+      if (
+        result.faces.length === 0
+      ) {
 
-        const x =
-            Math.max(
-                0,
-                face.x1
-            );
+        document.getElementById(
+          "status"
+        ).innerText =
+          "🔍 ĐANG TÌM KHUÔN MẶT...";
 
-        const y =
-            Math.max(
-                0,
-                face.y1
-            );
+      } else {
 
-        const w =
-            face.x2 -
-            face.x1;
-
-        const h =
-            face.y2 -
-            face.y1;
+        const face =
+          result.faces[0];
 
 
-        /*
-           KHUNG MẶT
-        */
-
-        ctx.strokeStyle =
-            "#00ff66";
-
-        ctx.lineWidth = 4;
-
-        ctx.strokeRect(
-            x,
-            y,
-            w,
-            h
+        drawFace(
+          face,
+          result.inputInfo
         );
 
 
+        document.getElementById(
+          "status"
+        ).innerText =
+          "✅ ĐÃ PHÁT HIỆN " +
+          result.faces.length +
+          " KHUÔN MẶT";
+
+
         /*
-           5 KEYPOINTS
+          Tạo ảnh khuôn mặt
+          đã căn chỉnh
         */
 
-        if (
-            face.keypoints
-        ) {
+        const aligned =
+          cropAlignedFace(
+            face,
+            result.inputInfo
+          );
 
-            ctx.fillStyle =
-                "#00ff66";
+
+        if (aligned) {
+
+          try {
+
+            const embedding =
+              await createFaceEmbedding(
+                aligned
+              );
 
 
-            for (
-                const p of face.keypoints
-            ) {
+            document.getElementById(
+              "result"
+            ).innerHTML =
 
-                ctx.beginPath();
+              "🟢 <b>ARCFACE HOẠT ĐỘNG</b><br>" +
 
-                ctx.arc(
-                    p.x,
-                    p.y,
-                    5,
-                    0,
-                    Math.PI * 2
-                );
+              "Face ID: <b>ĐÃ TẠO</b><br>" +
 
-                ctx.fill();
+              "Embedding: <b>" +
+              embedding.length +
+              " chiều</b>";
 
-            }
+            console.log(
+              "FACE EMBEDDING:",
+              embedding
+            );
+
+          } catch (error) {
+
+            console.error(
+              "ArcFace error:",
+              error
+            );
+
+            document.getElementById(
+              "result"
+            ).innerText =
+              "❌ ArcFace lỗi: " +
+              error.message;
+          }
 
         }
 
-
-        /*
-           SCORE
-        */
-
-        ctx.fillStyle =
-            "#00ff66";
-
-        ctx.font =
-            "bold 18px Arial";
-
-
-        ctx.fillText(
-
-            "FACE " +
-            (
-                face.score *
-                100
-            ).toFixed(1) +
-            "%",
-
-            x,
-            Math.max(
-                22,
-                y - 8
-            )
-
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   RUN DETECTION
-===================================================== */
-
-async function detectFaces() {
-
-    if (
-        !session ||
-        !video.videoWidth
-    ) {
-
-        return;
-
-    }
-
-
-    const input =
-        createInput();
-
-
-    const inputName =
-        session.inputNames[0];
-
-
-    const outputs =
-        await session.run({
-
-            [inputName]:
-                input.tensor
-
-        });
-
-
-    /*
-       Lấy output chuẩn
-    */
-
-    const score8 =
-        getOutput(
-            outputs,
-            "score_8"
-        );
-
-    const score16 =
-        getOutput(
-            outputs,
-            "score_16"
-        );
-
-    const score32 =
-        getOutput(
-            outputs,
-            "score_32"
-        );
-
-
-    const bbox8 =
-        getOutput(
-            outputs,
-            "bbox_8"
-        );
-
-    const bbox16 =
-        getOutput(
-            outputs,
-            "bbox_16"
-        );
-
-    const bbox32 =
-        getOutput(
-            outputs,
-            "bbox_32"
-        );
-
-
-    const kps8 =
-        getOutput(
-            outputs,
-            "kps_8"
-        );
-
-    const kps16 =
-        getOutput(
-            outputs,
-            "kps_16"
-        );
-
-    const kps32 =
-        getOutput(
-            outputs,
-            "kps_32"
-        );
-
-
-    let faces = [];
-
-
-    faces.push(
-        ...decodeStride(
-            score8,
-            bbox8,
-            kps8,
-            8
-        )
-    );
-
-
-    faces.push(
-        ...decodeStride(
-            score16,
-            bbox16,
-            kps16,
-            16
-        )
-    );
-
-
-    faces.push(
-        ...decodeStride(
-            score32,
-            bbox32,
-            kps32,
-            32
-        )
-    );
-
-
-    /*
-       NMS
-    */
-
-    faces =
-        nms(faces);
-
-
-    /*
-       Đổi tọa độ về camera
-    */
-
-    const finalFaces =
-        faces.map(
-            face =>
-                convertFace(
-                    face,
-                    input.scale,
-                    input.padX,
-                    input.padY
-                )
-        );
-
-
-    drawFaces(
-        finalFaces
-    );
-
-
-    if (
-        finalFaces.length > 0
-    ) {
-
-        setStatus(
-            "✅ ĐÃ PHÁT HIỆN " +
-            finalFaces.length +
-            " KHUÔN MẶT",
-            "ok"
-        );
-
-    } else {
-
-        setStatus(
-            "🔎 ĐANG TÌM KHUÔN MẶT...",
-            "info"
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   LOOP
-===================================================== */
-
-async function detectionLoop() {
-
-    if (!running) {
-        return;
-    }
-
-
-    try {
-
-        await detectFaces();
+      }
 
     } catch (error) {
 
-        console.error(
-            "SCRFD ERROR:",
-            error
-        );
+      console.error(
+        "Detection error:",
+        error
+      );
 
-        setStatus(
-            "❌ SCRFD: " +
-            error.message,
-            "error"
-        );
+      document.getElementById(
+        "status"
+      ).innerText =
+        "❌ LỖI AI";
 
-        running = false;
-
-        return;
-
+      document.getElementById(
+        "result"
+      ).innerText =
+        error.message;
     }
 
 
-    requestAnimationFrame(
-        detectionLoop
-    );
+    processing = false;
+  }
 
+
+  requestAnimationFrame(
+    processFrame
+  );
 }
 
 
-/* =====================================================
-   START SYSTEM
-===================================================== */
+// =====================================================
+// TỰ ĐỘNG TẢI MODEL
+// =====================================================
 
-async function startSystem() {
-
-    if (running) {
-        return;
-    }
-
-
-    try {
-
-        setStatus(
-            "⏳ Đang khởi động camera...",
-            "info"
-        );
-
-
-        await startCamera();
-
-
-        await loadModel();
-
-
-        running = true;
-
-
-        setStatus(
-            "🔎 Đang nhận diện khuôn mặt...",
-            "info"
-        );
-
-
-        detectionLoop();
-
-
-    } catch (error) {
-
-        console.error(
-            "SYSTEM ERROR:",
-            error
-        );
-
-
-        setStatus(
-            "❌ LỖI: " +
-            error.message,
-            "error"
-        );
-
-    }
-
-}
+loadModels();
 
 </script>
 
