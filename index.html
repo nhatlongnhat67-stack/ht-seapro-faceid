@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>HT SEAPRO - ĐIỂM DANH</title>
+  <title>HT SEAPRO - FACE ID</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.0/dist/ort.min.js"></script>
 
   <style>
     * {
@@ -20,7 +22,7 @@
     }
 
     h1 {
-      margin: 25px 0 10px;
+      margin: 25px 0 8px;
       color: #1683ff;
       font-size: 30px;
     }
@@ -31,6 +33,7 @@
     }
 
     .camera-box {
+      position: relative;
       width: 92%;
       max-width: 700px;
       margin: auto;
@@ -42,6 +45,16 @@
     video {
       width: 100%;
       display: block;
+      transform: scaleX(-1);
+    }
+
+    canvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
       transform: scaleX(-1);
     }
 
@@ -73,6 +86,10 @@
     .error {
       color: #ff5252;
     }
+
+    .info {
+      color: #ffd54f;
+    }
   </style>
 </head>
 
@@ -86,61 +103,352 @@
 
   <div class="camera-box">
     <video id="camera" autoplay playsinline></video>
+    <canvas id="overlay"></canvas>
   </div>
 
-  <div id="status">
-    Đang chờ bật camera...
+  <div id="status" class="info">
+    ⏳ Đang khởi động hệ thống...
   </div>
 
-  <button onclick="startCamera()">
+  <button onclick="startSystem()">
     📷 BẬT CAMERA
   </button>
 
-  <script>
+<script>
 
-    async function startCamera() {
+const MODEL_PATH = "./model/scrfd_500m_one.onnx";
 
-      const video = document.getElementById("camera");
-      const status = document.getElementById("status");
+let video;
+let canvas;
+let ctx;
+let session;
+let running = false;
 
-      status.textContent = "⏳ Đang mở camera...";
-      status.className = "";
 
-      try {
+/* =========================
+   KHỞI TẠO CAMERA
+========================= */
 
-        const stream =
-          await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: "user",
-              width: {
-                ideal: 1280
-              },
-              height: {
-                ideal: 720
-              }
-            },
-            audio: false
-          });
+async function startCamera() {
 
-        video.srcObject = stream;
+  video = document.getElementById("camera");
 
-        status.textContent =
-          "✅ CAMERA ĐANG HOẠT ĐỘNG";
+  const stream =
+    await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "user",
+        width: {
+          ideal: 1280
+        },
+        height: {
+          ideal: 720
+        }
+      },
+      audio: false
+    });
 
-        status.className = "ok";
+  video.srcObject = stream;
 
-      } catch (error) {
+  await new Promise(resolve => {
+    video.onloadedmetadata = resolve;
+  });
 
-        console.error(error);
+  await video.play();
 
-        status.textContent =
-          "❌ KHÔNG THỂ MỞ CAMERA: " + error.message;
+  canvas = document.getElementById("overlay");
 
-        status.className = "error";
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  ctx = canvas.getContext("2d");
+
+  console.log(
+    "Camera:",
+    video.videoWidth,
+    "x",
+    video.videoHeight
+  );
+}
+
+
+/* =========================
+   LOAD SCRFD
+========================= */
+
+async function loadSCRFD() {
+
+  const status =
+    document.getElementById("status");
+
+  status.textContent =
+    "⏳ Đang tải SCRFD...";
+
+  status.className = "info";
+
+  ort.env.wasm.numThreads = 1;
+
+  session =
+    await ort.InferenceSession.create(
+      MODEL_PATH,
+      {
+        executionProviders: ["wasm"]
       }
+    );
+
+  console.log("SCRFD INPUTS");
+
+  session.inputNames.forEach(name => {
+
+    const metadata =
+      session.inputs[name];
+
+    console.log(
+      name,
+      metadata
+    );
+
+  });
+
+  console.log("SCRFD OUTPUTS");
+
+  session.outputNames.forEach(name => {
+
+    const metadata =
+      session.outputs[name];
+
+    console.log(
+      name,
+      metadata
+    );
+
+  });
+
+  status.textContent =
+    "✅ SCRFD ĐÃ TẢI THÀNH CÔNG";
+
+  status.className = "ok";
+}
+
+
+/* =========================
+   TEST MODEL
+========================= */
+
+async function testSCRFD() {
+
+  const status =
+    document.getElementById("status");
+
+  status.textContent =
+    "⏳ Đang kiểm tra SCRFD...";
+
+  status.className = "info";
+
+
+  /*
+   * SCRFD thường sử dụng ảnh 640 x 640.
+   */
+
+  const SIZE = 640;
+
+  const tempCanvas =
+    document.createElement("canvas");
+
+  tempCanvas.width = SIZE;
+  tempCanvas.height = SIZE;
+
+  const tempCtx =
+    tempCanvas.getContext("2d");
+
+  tempCtx.drawImage(
+    video,
+    0,
+    0,
+    SIZE,
+    SIZE
+  );
+
+  const imageData =
+    tempCtx.getImageData(
+      0,
+      0,
+      SIZE,
+      SIZE
+    );
+
+
+  /*
+   * RGB
+   * NCHW
+   * Normalize theo SCRFD
+   */
+
+  const input =
+    new Float32Array(
+      3 * SIZE * SIZE
+    );
+
+  const area =
+    SIZE * SIZE;
+
+  for (
+    let i = 0;
+    i < area;
+    i++
+  ) {
+
+    const r =
+      imageData.data[i * 4];
+
+    const g =
+      imageData.data[i * 4 + 1];
+
+    const b =
+      imageData.data[i * 4 + 2];
+
+
+    input[i] =
+      (r - 127.5) / 128.0;
+
+    input[area + i] =
+      (g - 127.5) / 128.0;
+
+    input[2 * area + i] =
+      (b - 127.5) / 128.0;
+  }
+
+
+  const inputTensor =
+    new ort.Tensor(
+      "float32",
+      input,
+      [1, 3, SIZE, SIZE]
+    );
+
+
+  const inputName =
+    session.inputNames[0];
+
+
+  console.log(
+    "Input name:",
+    inputName
+  );
+
+
+  try {
+
+    const outputs =
+      await session.run({
+        [inputName]:
+          inputTensor
+      });
+
+
+    console.log(
+      "SCRFD OUTPUT:",
+      outputs
+    );
+
+
+    for (
+      const name of session.outputNames
+    ) {
+
+      const tensor =
+        outputs[name];
+
+      console.log(
+        "OUTPUT:",
+        name,
+        "shape:",
+        tensor.dims,
+        "length:",
+        tensor.data.length
+      );
     }
 
-  </script>
+
+    status.textContent =
+      "✅ SCRFD ĐÃ CHẠY INFERENCE";
+
+    status.className = "ok";
+
+
+    /*
+     * Xóa khung cũ
+     */
+
+    ctx.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+
+    /*
+     * Tạm thời chưa vẽ bounding box.
+     *
+     * Bước kế tiếp sẽ đọc chính xác
+     * output của model và giải mã
+     * bounding box + NMS.
+     */
+
+  } catch (error) {
+
+    console.error(error);
+
+    status.textContent =
+      "❌ SCRFD LỖI: " +
+      error.message;
+
+    status.className = "error";
+  }
+}
+
+
+/* =========================
+   START SYSTEM
+========================= */
+
+async function startSystem() {
+
+  const status =
+    document.getElementById("status");
+
+  try {
+
+    status.textContent =
+      "⏳ Đang mở camera...";
+
+    status.className = "info";
+
+    await startCamera();
+
+
+    status.textContent =
+      "⏳ Đang tải model SCRFD...";
+
+    await loadSCRFD();
+
+
+    await testSCRFD();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    status.textContent =
+      "❌ LỖI: " +
+      error.message;
+
+    status.className = "error";
+  }
+}
+
+</script>
 
 </body>
 </html>
