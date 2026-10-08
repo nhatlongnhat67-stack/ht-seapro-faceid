@@ -8,9 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.0/dist/ort.min.js"></script>
 
 <style>
-*{
-    box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
     margin:0;
@@ -23,39 +21,35 @@ body{
 
 .container{
     width:min(1000px,94%);
-    margin:0 auto;
+    margin:auto;
     padding:25px 0 40px;
 }
 
-.logo{
+.header{
     text-align:center;
     margin-bottom:20px;
 }
 
-.logo h1{
+.header h1{
     margin:0;
     font-size:34px;
     font-weight:900;
     letter-spacing:2px;
 }
 
-.logo .sea{
+.header h1 span{
     color:#20a9ff;
 }
 
-.logo .pro{
-    color:#ffd23f;
-}
-
-.logo p{
+.header p{
     margin:8px 0 0;
     color:#8bb9d5;
     font-size:15px;
     letter-spacing:1px;
 }
 
-.main-card{
-    background:rgba(5,18,30,.96);
+.card{
+    background:rgba(5,18,30,.97);
     border:1px solid #214c69;
     border-radius:24px;
     padding:20px;
@@ -66,14 +60,14 @@ body{
     text-align:center;
     font-size:25px;
     font-weight:800;
-    margin:0 0 18px;
+    margin-bottom:18px;
 }
 
 .camera-box{
     position:relative;
     width:100%;
     max-width:850px;
-    margin:0 auto;
+    margin:auto;
     background:#000;
     border-radius:18px;
     overflow:hidden;
@@ -90,8 +84,7 @@ body{
 
 #canvas{
     position:absolute;
-    left:0;
-    top:0;
+    inset:0;
     width:100%;
     height:100%;
     transform:scaleX(-1);
@@ -200,14 +193,12 @@ button:disabled{
     padding:25px;
     text-align:center;
     border-radius:18px;
-    background:
-        linear-gradient(
-            135deg,
-            rgba(4,55,30,.96),
-            rgba(3,28,18,.96)
-        );
+    background:linear-gradient(
+        135deg,
+        rgba(4,55,30,.96),
+        rgba(3,28,18,.96)
+    );
     border:1px solid #1ba85e;
-    box-shadow:0 0 30px rgba(0,255,100,.08);
 }
 
 .result.show{
@@ -259,12 +250,6 @@ button:disabled{
     font-size:13px;
 }
 
-.loading{
-    text-align:center;
-    color:#7fb9d7;
-    padding:10px;
-}
-
 @media(max-width:600px){
 
     .container{
@@ -272,7 +257,7 @@ button:disabled{
         padding-top:12px;
     }
 
-    .logo h1{
+    .header h1{
         font-size:27px;
     }
 
@@ -282,10 +267,6 @@ button:disabled{
 
     .nickname{
         font-size:32px;
-    }
-
-    .name{
-        font-size:18px;
     }
 
     button{
@@ -299,15 +280,14 @@ button:disabled{
 
 <div class="container">
 
-    <div class="logo">
+    <div class="header">
         <h1>
-            <span class="sea">HT SEAPRO</span>
-            <span class="pro"> ENTERTAINMENT</span>
+            <span>HT SEAPRO</span> ENTERTAINMENT
         </h1>
         <p>HỆ THỐNG ĐIỂM DANH FACE ID</p>
     </div>
 
-    <div class="main-card">
+    <div class="card">
 
         <div class="title">
             📷 ĐIỂM DANH NHÂN SỰ
@@ -380,7 +360,7 @@ button:disabled{
         <div id="result" class="result">
 
             <div class="success-title">
-                ✅ NHẬN DIỆN THÀNH CÔNG
+                ✅ NHÂN SỰ ĐƯỢC NHẬN DIỆN
             </div>
 
             <div
@@ -422,7 +402,7 @@ button:disabled{
 <script>
 
 /* =========================================================
-   CẤU HÌNH
+   CONFIG
 ========================================================= */
 
 const API_URL =
@@ -440,7 +420,7 @@ const FACE_SIZE = 112;
 
 const DET_THRESHOLD = 0.50;
 
-/* NGƯỠNG NHẬN DIỆN = 70% */
+/* 70% */
 const FACE_THRESHOLD = 0.70;
 
 const STRIDES = [8,16,32];
@@ -488,19 +468,15 @@ document.getElementById('liveStatus');
 
 
 /* =========================================================
-   BIẾN HỆ THỐNG
+   STATE
 ========================================================= */
 
 let scrfdSession = null;
-
 let arcfaceSession = null;
-
 let stream = null;
 
 let running = false;
-
 let processing = false;
-
 let identifying = false;
 
 let attendanceLocked = false;
@@ -509,36 +485,16 @@ let lastIdentifyTime = 0;
 
 
 /* =========================================================
-   LIVENESS
+   LIVENESS STATE
 ========================================================= */
 
 let previousX = null;
-
 let previousY = null;
 
 let movementTotal = 0;
-
 let movementFrames = 0;
 
 let livenessPassed = false;
-
-
-function resetLiveness(){
-
-    previousX = null;
-
-    previousY = null;
-
-    movementTotal = 0;
-
-    movementFrames = 0;
-
-    livenessPassed = false;
-
-    liveStatus.textContent =
-        'CHƯA XÁC THỰC';
-
-}
 
 
 /* =========================================================
@@ -552,12 +508,31 @@ function setStatus(text,type){
 
     statusBox.textContent =
         text;
+}
+
+
+/* =========================================================
+   RESET LIVENESS
+========================================================= */
+
+function resetLiveness(){
+
+    previousX = null;
+    previousY = null;
+
+    movementTotal = 0;
+    movementFrames = 0;
+
+    livenessPassed = false;
+
+    liveStatus.textContent =
+        'CHƯA XÁC THỰC';
 
 }
 
 
 /* =========================================================
-   LOAD AI
+   LOAD MODELS
 ========================================================= */
 
 async function loadAI(){
@@ -606,19 +581,19 @@ async function loadAI(){
         challenge.textContent =
             'Nhấn BẮT ĐẦU ĐIỂM DANH';
 
-
-    }catch(error){
+    }
+    catch(error){
 
         console.error(error);
 
         setStatus(
-            '❌ Không tải được AI: ' +
+            '❌ Lỗi tải AI: ' +
             error.message,
             'red'
         );
 
         challenge.textContent =
-            'Kiểm tra thư mục model trên GitHub.';
+            'Không thể tải mô hình AI.';
 
     }
 
@@ -626,7 +601,7 @@ async function loadAI(){
 
 
 /* =========================================================
-   CAMERA
+   START CAMERA
 ========================================================= */
 
 async function startCamera(){
@@ -677,14 +652,13 @@ async function startCamera(){
 
 
         running = true;
-
         processing = false;
-
         identifying = false;
 
         attendanceLocked = false;
 
         lastIdentifyTime = 0;
+
 
         resetLiveness();
 
@@ -710,8 +684,8 @@ async function startCamera(){
 
         detectLoop();
 
-
-    }catch(error){
+    }
+    catch(error){
 
         console.error(error);
 
@@ -727,30 +701,30 @@ async function startCamera(){
 
 
 /* =========================================================
-   STOP
+   STOP CAMERA
 ========================================================= */
 
 function stopCamera(){
 
     running = false;
-
     processing = false;
-
     identifying = false;
 
     if(stream){
 
         stream
-        .getTracks()
-        .forEach(
-            track =>
-            track.stop()
-        );
+            .getTracks()
+            .forEach(
+                track =>
+                track.stop()
+            );
 
         stream = null;
     }
 
+
     video.srcObject = null;
+
 
     ctx.clearRect(
         0,
@@ -759,7 +733,9 @@ function stopCamera(){
         canvas.height
     );
 
+
     resetLiveness();
+
 
     challenge.textContent =
         'Camera đã dừng.';
@@ -768,7 +744,7 @@ function stopCamera(){
 
 
 /* =========================================================
-   LẤY FRAME
+   GET FRAME
 ========================================================= */
 
 function getFrame(){
@@ -784,17 +760,18 @@ function getFrame(){
     c.height =
         video.videoHeight;
 
+
     c.getContext('2d')
-    .drawImage(
-        video,
-        0,
-        0,
-        c.width,
-        c.height
-    );
+        .drawImage(
+            video,
+            0,
+            0,
+            c.width,
+            c.height
+        );
+
 
     return c;
-
 }
 
 
@@ -813,6 +790,7 @@ function letterbox(
             size / source.height
         );
 
+
     const width =
         Math.round(
             source.width * scale
@@ -823,20 +801,23 @@ function letterbox(
             source.height * scale
         );
 
+
     const c =
         document.createElement(
             'canvas'
         );
 
     c.width = size;
-
     c.height = size;
+
 
     const g =
         c.getContext('2d');
 
+
     g.fillStyle =
         'rgb(127,127,127)';
+
 
     g.fillRect(
         0,
@@ -845,11 +826,13 @@ function letterbox(
         size
     );
 
+
     const ox =
-        (size-width)/2;
+        (size - width) / 2;
 
     const oy =
-        (size-height)/2;
+        (size - height) / 2;
+
 
     g.drawImage(
         source,
@@ -858,6 +841,7 @@ function letterbox(
         width,
         height
     );
+
 
     return {
         canvas:c,
@@ -870,7 +854,7 @@ function letterbox(
 
 
 /* =========================================================
-   FRAME → TENSOR
+   IMAGE → TENSOR
 ========================================================= */
 
 function imageTensor(c){
@@ -884,12 +868,15 @@ function imageTensor(c){
             c.height
         );
 
+
     const area =
-        c.width*c.height;
+        c.width *
+        c.height;
+
 
     const data =
         new Float32Array(
-            area*3
+            area * 3
         );
 
 
@@ -900,25 +887,28 @@ function imageTensor(c){
     ){
 
         const p =
-            i*4;
+            i * 4;
+
 
         data[i] =
             (
-                image.data[p]
-                -127.5
-            )/128;
+                image.data[p] -
+                127.5
+            ) / 128;
+
 
         data[area+i] =
             (
-                image.data[p+1]
-                -127.5
-            )/128;
+                image.data[p+1] -
+                127.5
+            ) / 128;
+
 
         data[area*2+i] =
             (
-                image.data[p+2]
-                -127.5
-            )/128;
+                image.data[p+2] -
+                127.5
+            ) / 128;
 
     }
 
@@ -938,7 +928,7 @@ function imageTensor(c){
 
 
 /* =========================================================
-   TÌM OUTPUT
+   FIND OUTPUT
 ========================================================= */
 
 function findOutput(
@@ -949,6 +939,7 @@ function findOutput(
     const keys =
         Object.keys(outputs);
 
+
     const key =
         keys.find(
             k =>
@@ -958,6 +949,7 @@ function findOutput(
              )
         );
 
+
     return key
         ? outputs[key]
         : null;
@@ -966,7 +958,7 @@ function findOutput(
 
 
 /* =========================================================
-   SCRFD
+   SCRFD DECODER
 ========================================================= */
 
 function decodeSCRFD(outputs){
@@ -975,8 +967,7 @@ function decodeSCRFD(outputs){
 
 
     for(
-        const stride
-        of STRIDES
+        const stride of STRIDES
     ){
 
         const score =
@@ -984,6 +975,7 @@ function decodeSCRFD(outputs){
                 outputs,
                 'score_' + stride
             );
+
 
         const bbox =
             findOutput(
@@ -1002,26 +994,24 @@ function decodeSCRFD(outputs){
         const scores =
             score.data;
 
+
         const boxes =
             bbox.data;
 
 
         let count =
-            scores.length;
-
-
-        count =
             Math.min(
-                count,
+                scores.length,
                 Math.floor(
-                    boxes.length/4
+                    boxes.length / 4
                 )
             );
 
 
         const grid =
             Math.ceil(
-                INPUT_SIZE/stride
+                INPUT_SIZE /
+                stride
             );
 
 
@@ -1046,45 +1036,49 @@ function decodeSCRFD(outputs){
 
             const cell =
                 Math.floor(
-                    i/2
+                    i / 2
                 );
 
 
             const gx =
-                cell%grid;
+                cell % grid;
+
 
             const gy =
                 Math.floor(
-                    cell/grid
+                    cell / grid
                 );
 
 
             const b =
-                i*4;
+                i * 4;
 
 
             if(
-                b+3 >=
+                b + 3 >=
                 boxes.length
             )
                 continue;
 
 
             const x1 =
-                gx*stride -
-                boxes[b]*stride;
+                gx * stride -
+                boxes[b] * stride;
+
 
             const y1 =
-                gy*stride -
-                boxes[b+1]*stride;
+                gy * stride -
+                boxes[b+1] * stride;
+
 
             const x2 =
-                gx*stride +
-                boxes[b+2]*stride;
+                gx * stride +
+                boxes[b+2] * stride;
+
 
             const y2 =
-                gy*stride +
-                boxes[b+3]*stride;
+                gy * stride +
+                boxes[b+3] * stride;
 
 
             detections.push({
@@ -1092,11 +1086,9 @@ function decodeSCRFD(outputs){
                 score:confidence,
 
                 x1:x1,
-
                 y1:y1,
 
                 x2:x2,
-
                 y2:y2
 
             });
@@ -1114,7 +1106,7 @@ function decodeSCRFD(outputs){
 
     detections.sort(
         (a,b) =>
-        b.score-a.score
+        b.score - a.score
     );
 
 
@@ -1124,7 +1116,7 @@ function decodeSCRFD(outputs){
 
 
 /* =========================================================
-   FACE DETECTION
+   DETECT FACE
 ========================================================= */
 
 async function detectFace(frame){
@@ -1169,32 +1161,28 @@ async function detectFace(frame){
         (
             face.x1 -
             lb.ox
-        ) /
-        lb.scale;
+        ) / lb.scale;
 
 
     face.y1 =
         (
             face.y1 -
             lb.oy
-        ) /
-        lb.scale;
+        ) / lb.scale;
 
 
     face.x2 =
         (
             face.x2 -
             lb.ox
-        ) /
-        lb.scale;
+        ) / lb.scale;
 
 
     face.y2 =
         (
             face.y2 -
             lb.oy
-        ) /
-        lb.scale;
+        ) / lb.scale;
 
 
     face.x1 =
@@ -1203,17 +1191,20 @@ async function detectFace(frame){
             face.x1
         );
 
+
     face.y1 =
         Math.max(
             0,
             face.y1
         );
 
+
     face.x2 =
         Math.min(
             frame.width,
             face.x2
         );
+
 
     face.y2 =
         Math.min(
@@ -1228,7 +1219,7 @@ async function detectFace(frame){
 
 
 /* =========================================================
-   DRAW FACE
+   DRAW FACE BOX
 ========================================================= */
 
 function drawFace(face){
@@ -1257,12 +1248,13 @@ function drawFace(face){
     ctx.strokeRect(
 
         face.x1,
-
         face.y1,
 
-        face.x2-face.x1,
+        face.x2 -
+        face.x1,
 
-        face.y2-face.y1
+        face.y2 -
+        face.y1
 
     );
 
@@ -1293,14 +1285,14 @@ function checkLiveness(
         (
             face.x1 +
             face.x2
-        )/2;
+        ) / 2;
 
 
     const centerY =
         (
             face.y1 +
             face.y2
-        )/2;
+        ) / 2;
 
 
     if(
@@ -1323,15 +1315,15 @@ function checkLiveness(
 
         if(
             dx >
-            frameWidth*0.008 ||
+            frameWidth * 0.008 ||
             dy >
-            frameWidth*0.006
+            frameWidth * 0.006
         ){
 
             movementFrames++;
 
             movementTotal +=
-                dx+dy;
+                dx + dy;
 
         }
 
@@ -1339,20 +1331,19 @@ function checkLiveness(
 
 
     previousX = centerX;
-
     previousY = centerY;
 
 
     const required =
-        frameWidth*0.18;
+        frameWidth * 0.18;
 
 
     const progress =
         Math.min(
             100,
             Math.round(
-                movementTotal/
-                required*
+                movementTotal /
+                required *
                 100
             )
         );
@@ -1368,12 +1359,9 @@ function checkLiveness(
         liveStatus.textContent =
             'ĐẠT';
 
-        liveStatus.style.color =
-            '#00ff75';
-
 
         challenge.textContent =
-            '✅ NGƯỜI THẬT ĐÃ ĐƯỢC XÁC THỰC';
+            '✅ XÁC THỰC NGƯỜI THẬT THÀNH CÔNG';
 
 
         return true;
@@ -1406,44 +1394,52 @@ function cropFace(
 ){
 
     const width =
-        face.x2-face.x1;
+        face.x2 -
+        face.x1;
+
 
     const height =
-        face.y2-face.y1;
+        face.y2 -
+        face.y1;
 
 
     const paddingX =
-        width*0.25;
+        width * 0.25;
+
 
     const paddingY =
-        height*0.25;
+        height * 0.25;
 
 
     const x =
         Math.max(
             0,
-            face.x1-paddingX
+            face.x1 -
+            paddingX
         );
 
 
     const y =
         Math.max(
             0,
-            face.y1-paddingY
+            face.y1 -
+            paddingY
         );
 
 
     const x2 =
         Math.min(
             frame.width,
-            face.x2+paddingX
+            face.x2 +
+            paddingX
         );
 
 
     const y2 =
         Math.min(
             frame.height,
-            face.y2+paddingY
+            face.y2 +
+            paddingY
         );
 
 
@@ -1455,6 +1451,7 @@ function cropFace(
 
     c.width =
         FACE_SIZE;
+
 
     c.height =
         FACE_SIZE;
@@ -1486,7 +1483,7 @@ function cropFace(
 
 
 /* =========================================================
-   ARCFACE
+   ARCFACE 512D
 ========================================================= */
 
 async function createEmbedding(
@@ -1505,13 +1502,13 @@ async function createEmbedding(
 
 
     const area =
-        FACE_SIZE*
+        FACE_SIZE *
         FACE_SIZE;
 
 
     const data =
         new Float32Array(
-            area*3
+            area * 3
         );
 
 
@@ -1522,28 +1519,28 @@ async function createEmbedding(
     ){
 
         const p =
-            i*4;
+            i * 4;
 
 
         data[i] =
             (
-                image.data[p]
-                -127.5
-            )/127.5;
+                image.data[p] -
+                127.5
+            ) / 127.5;
 
 
         data[area+i] =
             (
-                image.data[p+1]
-                -127.5
-            )/127.5;
+                image.data[p+1] -
+                127.5
+            ) / 127.5;
 
 
         data[area*2+i] =
             (
-                image.data[p+2]
-                -127.5
-            )/127.5;
+                image.data[p+2] -
+                127.5
+            ) / 127.5;
 
     }
 
@@ -1597,7 +1594,7 @@ async function createEmbedding(
     ){
 
         norm +=
-            embedding[i]*
+            embedding[i] *
             embedding[i];
 
     }
@@ -1656,20 +1653,14 @@ function embeddingToBase64(
 
         binary +=
             String.fromCharCode.apply(
-
                 null,
-
                 bytes.subarray(
-
                     i,
-
                     Math.min(
                         i+chunk,
                         bytes.length
                     )
-
                 )
-
             );
 
     }
@@ -1683,7 +1674,7 @@ function embeddingToBase64(
 
 
 /* =========================================================
-   GỬI NHẬN DIỆN
+   GỬI EMBEDDING LÊN APPS SCRIPT
 ========================================================= */
 
 function identifyFace(
@@ -1737,8 +1728,8 @@ function identifyFace(
                     const score =
                         Number(
                             data &&
-                            data.score
-                            || 0
+                            data.score ||
+                            0
                         );
 
 
@@ -1746,7 +1737,7 @@ function identifyFace(
                         '❌ KHÔNG NHẬN DIỆN ĐƯỢC — ' +
                         'ĐỘ TƯƠNG ĐỒNG: ' +
                         (
-                            score*100
+                            score * 100
                         ).toFixed(2) +
                         '% — CẦN ≥ 70%',
                         'red'
@@ -1758,7 +1749,8 @@ function identifyFace(
 
                 }
 
-            }catch(error){
+            }
+            catch(error){
 
                 console.error(error);
 
@@ -1779,7 +1771,8 @@ function identifyFace(
                     callbackName
                 ];
 
-            }catch(e){}
+            }
+            catch(e){}
 
         };
 
@@ -1826,7 +1819,8 @@ function identifyFace(
 
             try{
                 script.remove();
-            }catch(e){}
+            }
+            catch(e){}
 
         },
         10000
@@ -1860,15 +1854,13 @@ function showAttendanceResult(
     document.getElementById(
         'nickname'
     ).textContent =
-        data.ngheDanh ||
-        '';
+        data.ngheDanh || '';
 
 
     document.getElementById(
         'fullname'
     ).textContent =
-        data.hoTen ||
-        '';
+        data.hoTen || '';
 
 
     document.getElementById(
@@ -1876,8 +1868,7 @@ function showAttendanceResult(
     ).textContent =
         'Nhóm: ' +
         (
-            data.nhom ||
-            ''
+            data.nhom || ''
         );
 
 
@@ -1886,7 +1877,7 @@ function showAttendanceResult(
     ).textContent =
         'Độ tương đồng: ' +
         (
-            score*100
+            score * 100
         ).toFixed(2) +
         '%';
 
@@ -1910,8 +1901,8 @@ function showAttendanceResult(
         challenge.textContent =
             'Đã ghi nhận điểm danh cho nhân sự.';
 
-
-    }else{
+    }
+    else{
 
         document.getElementById(
             'attendanceMessage'
@@ -1932,7 +1923,7 @@ function showAttendanceResult(
 
 
 /* =========================================================
-   VÒNG LẶP NHẬN DIỆN
+   MAIN LOOP
 ========================================================= */
 
 async function detectLoop(){
@@ -1981,6 +1972,7 @@ async function detectLoop(){
         canvas.width =
             frame.width;
 
+
         canvas.height =
             frame.height;
 
@@ -2006,8 +1998,8 @@ async function detectLoop(){
             challenge.textContent =
                 '🔐 Đưa khuôn mặt vào giữa camera';
 
-
-        }else{
+        }
+        else{
 
             const live =
                 checkLiveness(
@@ -2066,8 +2058,8 @@ async function detectLoop(){
 
         }
 
-
-    }catch(error){
+    }
+    catch(error){
 
         console.error(error);
 
@@ -2096,19 +2088,18 @@ async function detectLoop(){
 
 
 /* =========================================================
-   BUTTON
+   BUTTONS
 ========================================================= */
 
 startBtn.onclick =
     startCamera;
-
 
 stopBtn.onclick =
     stopCamera;
 
 
 /* =========================================================
-   KHỞI ĐỘNG
+   START AI
 ========================================================= */
 
 loadAI();
