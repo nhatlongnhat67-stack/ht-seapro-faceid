@@ -9,23 +9,29 @@
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.0/dist/ort.min.js"></script>
 
 <style>
+
 *{
     box-sizing:border-box;
 }
 
 body{
     margin:0;
-    font-family:Arial,Helvetica,sans-serif;
-    background:
-        radial-gradient(circle at top,#102c50 0%,#07111f 45%,#03070d 100%);
-    color:white;
     min-height:100vh;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#fff;
+    background:
+        radial-gradient(
+            circle at top,
+            #12365d 0%,
+            #081522 45%,
+            #02060b 100%
+        );
 }
 
 .container{
     width:min(1100px,96%);
     margin:auto;
-    padding:20px 0 40px;
+    padding:22px 0 40px;
 }
 
 .header{
@@ -39,78 +45,95 @@ body{
     letter-spacing:3px;
 }
 
-.logo span{
-    color:#35a8ff;
+.logo .blue{
+    color:#2da8ff;
 }
 
-.logo b{
+.logo .yellow{
     color:#ffd43b;
 }
 
 .subtitle{
-    color:#9eb5cc;
-    margin-top:5px;
+    margin-top:6px;
+    color:#9fb6cc;
+    font-size:14px;
 }
 
 .mode-buttons{
     display:flex;
-    gap:12px;
     justify-content:center;
-    margin:20px 0;
+    gap:12px;
     flex-wrap:wrap;
+    margin:20px 0;
 }
 
 .mode-buttons button{
     border:0;
-    padding:14px 25px;
     border-radius:12px;
-    font-size:16px;
-    font-weight:700;
+    padding:14px 24px;
+    color:#fff;
+    background:#152b43;
+    font-size:15px;
+    font-weight:800;
     cursor:pointer;
-    color:white;
-    background:#162b43;
 }
 
 .mode-buttons button.active{
-    background:linear-gradient(135deg,#087cf0,#00b7ff);
-    box-shadow:0 5px 25px rgba(0,150,255,.35);
+    background:
+        linear-gradient(
+            135deg,
+            #087cf0,
+            #00b9ff
+        );
+    box-shadow:
+        0 8px 30px
+        rgba(0,150,255,.30);
 }
 
 .panel{
-    background:rgba(10,24,41,.92);
-    border:1px solid rgba(255,255,255,.09);
+    background:rgba(8,22,38,.94);
+    border:1px solid rgba(255,255,255,.08);
     border-radius:20px;
     padding:20px;
-    box-shadow:0 20px 60px rgba(0,0,0,.35);
+    box-shadow:
+        0 20px 60px
+        rgba(0,0,0,.35);
 }
 
 .hidden{
     display:none!important;
 }
 
+.panel h2{
+    margin-top:0;
+    text-align:center;
+    font-size:22px;
+}
+
 .form-grid{
     display:grid;
-    grid-template-columns:repeat(3,1fr);
+    grid-template-columns:
+        repeat(3,1fr);
     gap:12px;
-    margin-bottom:15px;
+    margin-bottom:18px;
 }
 
 .field label{
     display:block;
-    color:#9eb5cc;
-    font-size:13px;
     margin-bottom:6px;
+    color:#9eb6cd;
+    font-size:13px;
 }
 
 .field input{
     width:100%;
-    border:1px solid #29445f;
-    background:#081625;
-    color:white;
-    border-radius:10px;
     padding:13px;
-    font-size:15px;
+    border-radius:10px;
+    border:1px solid #294762;
     outline:none;
+    background:#071522;
+    color:#fff;
+    font-size:15px;
 }
 
 .field input:focus{
@@ -122,73 +145,105 @@ body{
     width:100%;
     max-width:900px;
     margin:20px auto;
-    background:#000;
-    border-radius:18px;
     overflow:hidden;
+    border-radius:18px;
+    background:#000;
     aspect-ratio:16/9;
 }
 
-#video{
+.camera-wrap video{
+    display:block;
     width:100%;
     height:100%;
     object-fit:cover;
-    display:block;
     transform:scaleX(-1);
 }
 
-#overlay{
+.camera-wrap canvas{
     position:absolute;
-    inset:0;
+    left:0;
+    top:0;
     width:100%;
     height:100%;
     pointer-events:none;
 }
 
 .status{
-    text-align:center;
-    background:#071321;
-    border-radius:12px;
+    width:100%;
+    max-width:900px;
+    margin:15px auto;
     padding:14px;
-    margin-top:15px;
-    color:#bcd0e4;
+    border-radius:12px;
+    text-align:center;
+    background:#071522;
+    color:#c0d3e5;
+    line-height:1.5;
 }
 
 .status.success{
     color:#4cff91;
 }
 
-.status.error{
-    color:#ff7474;
-}
-
 .status.warning{
     color:#ffd75a;
+}
+
+.status.error{
+    color:#ff7777;
+}
+
+.model-status{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:15px 0;
+}
+
+.badge{
+    padding:8px 13px;
+    border-radius:20px;
+    background:#10243a;
+    border:1px solid #244b70;
+    color:#a9c6df;
+    font-size:13px;
+}
+
+.badge.ok{
+    color:#4cff91;
+    border-color:#218957;
 }
 
 .buttons{
     display:flex;
     justify-content:center;
     gap:12px;
-    flex-wrap:wrap;
     margin-top:15px;
 }
 
 .primary{
-    background:linear-gradient(135deg,#008cff,#00c6ff);
     border:0;
-    color:white;
-    font-weight:800;
-    padding:14px 24px;
     border-radius:12px;
+    padding:14px 26px;
+    color:#fff;
+    font-size:15px;
+    font-weight:800;
     cursor:pointer;
+    background:
+        linear-gradient(
+            135deg,
+            #008cff,
+            #00c6ff
+        );
 }
 
-.green{
-    background:linear-gradient(135deg,#00a85a,#00d878);
-}
-
-.red{
-    background:linear-gradient(135deg,#b52b2b,#e94b4b);
+.primary.green{
+    background:
+        linear-gradient(
+            135deg,
+            #00a85a,
+            #00d878
+        );
 }
 
 button:disabled{
@@ -199,163 +254,177 @@ button:disabled{
 .face-info{
     max-width:600px;
     margin:20px auto;
-    background:#071827;
-    border:1px solid #173957;
+    padding:20px;
     border-radius:16px;
-    padding:18px;
+    background:#061521;
+    border:1px solid #1c4668;
 }
 
-.face-info .title{
+.face-title{
     text-align:center;
-    color:#7dbbff;
-    font-size:14px;
+    color:#8ec7ff;
+    font-size:13px;
     margin-bottom:12px;
 }
 
-.identity{
+.nickname{
     text-align:center;
-}
-
-.identity .nickname{
+    color:#ffd43b;
     font-size:34px;
     font-weight:900;
-    color:#ffd43b;
 }
 
-.identity .fullname{
+.fullname{
+    text-align:center;
     font-size:20px;
-    margin-top:4px;
+    margin-top:6px;
 }
 
-.identity .group{
-    color:#9eb5cc;
-    margin-top:5px;
+.group{
+    text-align:center;
+    margin-top:7px;
+    color:#9eb6cd;
 }
 
 .score{
     text-align:center;
-    margin-top:12px;
+    margin-top:13px;
     color:#4cff91;
-    font-weight:bold;
-}
-
-.model-status{
-    display:flex;
-    justify-content:center;
-    flex-wrap:wrap;
-    gap:10px;
-    margin-top:15px;
-}
-
-.badge{
-    background:#102238;
-    border:1px solid #23496d;
-    padding:8px 12px;
-    border-radius:20px;
-    font-size:13px;
-    color:#a9c7e2;
-}
-
-.badge.ok{
-    color:#4cff91;
-    border-color:#1c8b55;
+    font-weight:800;
 }
 
 .help{
     text-align:center;
+    margin-top:18px;
     color:#718ba5;
     font-size:12px;
-    margin-top:18px;
     line-height:1.6;
 }
 
-.loading{
-    text-align:center;
-    padding:12px;
-    color:#66c7ff;
-}
-
 @media(max-width:700px){
+
     .form-grid{
         grid-template-columns:1fr;
     }
 
     .logo{
-        font-size:30px;
+        font-size:31px;
     }
 
-    .identity .nickname{
-        font-size:27px;
+    .mode-buttons button{
+        width:100%;
     }
+
+    .nickname{
+        font-size:28px;
+    }
+
 }
+
 </style>
 </head>
+
 
 <body>
 
 <div class="container">
 
     <div class="header">
+
         <div class="logo">
-            <span>HT</span> <b>SEAPRO</b>
+            <span class="blue">HT</span>
+            <span class="yellow">SEAPRO</span>
         </div>
+
         <div class="subtitle">
-            FACE ID • ĐIỂM DANH NHÂN SỰ
+            FACE ID • HỆ THỐNG NHẬN DIỆN NHÂN SỰ
         </div>
+
     </div>
 
 
-    <!-- MODE -->
+    <!-- =================================================
+         CHỌN CHỨC NĂNG
+    ================================================== -->
+
     <div class="mode-buttons">
 
         <button
-            id="btnRegisterMode"
+            id="registerModeButton"
             class="active"
             onclick="switchMode('register')">
+
             👤 ĐĂNG KÝ NHÂN SỰ
+
         </button>
 
+
         <button
-            id="btnAttendanceMode"
+            id="attendanceModeButton"
             onclick="switchMode('attendance')">
+
             📷 ĐIỂM DANH
+
         </button>
 
     </div>
 
 
-    <!-- =========================
-         ĐĂNG KÝ
-    ========================== -->
 
-    <div id="registerPanel" class="panel">
+    <!-- =================================================
+         ĐĂNG KÝ NHÂN SỰ
+    ================================================== -->
 
-        <h2>👤 ĐĂNG KÝ NHÂN SỰ</h2>
+    <div
+        id="registerPanel"
+        class="panel">
+
+        <h2>
+            👤 ĐĂNG KÝ NHÂN SỰ
+        </h2>
+
 
         <div class="form-grid">
 
             <div class="field">
-                <label>HỌ VÀ TÊN</label>
+
+                <label>
+                    HỌ VÀ TÊN
+                </label>
+
                 <input
                     id="hoTen"
                     type="text"
                     placeholder="Nhập họ và tên">
+
             </div>
 
+
             <div class="field">
-                <label>NGHỆ DANH / KIRA</label>
+
+                <label>
+                    NGHỆ DANH / KIRA
+                </label>
+
                 <input
                     id="ngheDanh"
                     type="text"
                     placeholder="Nhập nghệ danh">
+
             </div>
 
+
             <div class="field">
-                <label>NHÓM</label>
+
+                <label>
+                    NHÓM
+                </label>
+
                 <input
                     id="nhom"
                     type="text"
                     placeholder="Ví dụ: TEAM A">
+
             </div>
 
         </div>
@@ -364,85 +433,14 @@ button:disabled{
         <div class="camera-wrap">
 
             <video
-                id="video"
-                autoplay
-                muted
-                playsinline>
-            </video>
-
-            <canvas id="overlay"></canvas>
-
-        </div>
-
-
-        <div class="model-status">
-
-            <div
-                id="scrfdBadge"
-                class="badge">
-                ⚪ SCRFD đang tải
-            </div>
-
-            <div
-                id="arcBadge"
-                class="badge">
-                ⚪ ArcFace đang tải
-            </div>
-
-            <div
-                id="embedBadge"
-                class="badge">
-                ⚪ Embedding
-            </div>
-
-        </div>
-
-
-        <div
-            id="registerStatus"
-            class="status">
-            Đang khởi động camera...
-        </div>
-
-
-        <div class="buttons">
-
-            <button
-                id="saveButton"
-                class="primary green"
-                onclick="registerFace()"
-                disabled>
-                💾 LƯU FACE ID
-            </button>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =========================
-         ĐIỂM DANH
-    ========================== -->
-
-    <div
-        id="attendancePanel"
-        class="panel hidden">
-
-        <h2>📷 ĐIỂM DANH FACE ID</h2>
-
-
-        <div class="camera-wrap">
-
-            <video
-                id="videoAttendance"
+                id="registerVideo"
                 autoplay
                 muted
                 playsinline>
             </video>
 
             <canvas
-                id="overlayAttendance">
+                id="registerCanvas">
             </canvas>
 
         </div>
@@ -451,21 +449,116 @@ button:disabled{
         <div class="model-status">
 
             <div
-                id="scrfdBadgeAttendance"
+                id="registerScrfd"
                 class="badge">
+
+                ⚪ SCRFD ĐANG TẢI
+
+            </div>
+
+
+            <div
+                id="registerArcface"
+                class="badge">
+
+                ⚪ ARCFACE ĐANG TẢI
+
+            </div>
+
+
+            <div
+                id="registerEmbedding"
+                class="badge">
+
+                ⚪ EMBEDDING
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="registerStatus"
+            class="status">
+
+            ⏳ Đang khởi động hệ thống...
+
+        </div>
+
+
+        <div class="buttons">
+
+            <button
+                id="saveFaceButton"
+                class="primary green"
+                onclick="saveFace()"
+                disabled>
+
+                💾 LƯU FACE ID
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         ĐIỂM DANH
+    ================================================== -->
+
+    <div
+        id="attendancePanel"
+        class="panel hidden">
+
+        <h2>
+            📷 ĐIỂM DANH FACE ID
+        </h2>
+
+
+        <div class="camera-wrap">
+
+            <video
+                id="attendanceVideo"
+                autoplay
+                muted
+                playsinline>
+            </video>
+
+            <canvas
+                id="attendanceCanvas">
+            </canvas>
+
+        </div>
+
+
+        <div class="model-status">
+
+            <div
+                id="attendanceScrfd"
+                class="badge">
+
                 ⚪ SCRFD
+
             </div>
 
-            <div
-                id="arcBadgeAttendance"
-                class="badge">
-                ⚪ ArcFace
-            </div>
 
             <div
-                id="embedBadgeAttendance"
+                id="attendanceArcface"
                 class="badge">
-                ⚪ Embedding 512D
+
+                ⚪ ARCFACE
+
+            </div>
+
+
+            <div
+                id="attendanceEmbedding"
+                class="badge">
+
+                ⚪ EMBEDDING 512D
+
             </div>
 
         </div>
@@ -474,7 +567,9 @@ button:disabled{
         <div
             id="attendanceStatus"
             class="status">
+
             Đưa khuôn mặt vào camera.
+
         </div>
 
 
@@ -482,68 +577,81 @@ button:disabled{
             id="identityBox"
             class="face-info hidden">
 
-            <div class="title">
+            <div class="face-title">
                 NHÂN SỰ ĐƯỢC NHẬN DIỆN
             </div>
 
-            <div class="identity">
 
-                <div
-                    id="identityNickname"
-                    class="nickname">
-                    -
-                </div>
+            <div
+                id="identityNickname"
+                class="nickname">
 
-                <div
-                    id="identityFullname"
-                    class="fullname">
-                    -
-                </div>
-
-                <div
-                    id="identityGroup"
-                    class="group">
-                    -
-                </div>
+                -
 
             </div>
+
+
+            <div
+                id="identityFullname"
+                class="fullname">
+
+                -
+
+            </div>
+
+
+            <div
+                id="identityGroup"
+                class="group">
+
+                -
+
+            </div>
+
 
             <div
                 id="identityScore"
                 class="score">
+
                 -
+
             </div>
 
         </div>
 
 
         <div class="help">
-            Hệ thống sẽ tự động nhận diện khuôn mặt đã đăng ký.
-            Không cần nhập tên khi điểm danh.
+
+            Hệ thống tự động nhận diện nhân sự
+            đã đăng ký Face ID.
+
         </div>
 
     </div>
 
 
     <div class="help">
-        HT SEAPRO • SCRFD + ArcFace • Face Embedding 512 chiều
+
+        HT SEAPRO • SCRFD + ArcFace • Embedding 512 chiều
+
     </div>
 
 </div>
 
 
-<!-- IFRAME ẨN CHO POST -->
+<!-- IFRAME ẨN -->
 <iframe
-    name="hiddenFrame"
     id="hiddenFrame"
+    name="hiddenFrame"
     style="display:none">
 </iframe>
+
 
 
 <script>
 
 /* =========================================================
-   CONFIG
+   CẤU HÌNH
 ========================================================= */
 
 const API_URL =
@@ -553,125 +661,169 @@ const API_URL =
 const SCRFD_MODEL =
 "./model/scrfd_500m_bnkps.onnx";
 
+
 const ARCFACE_MODEL =
 "./model/w600k_mbf.onnx";
 
 
-const INPUT_SIZE = 640;
-const FACE_SIZE = 112;
-
-const DET_THRESHOLD = 0.50;
-const NMS_THRESHOLD = 0.40;
-
-const STRIDES = [8,16,32];
+const DET_SIZE =
+640;
 
 
-/* =========================================================
-   GLOBAL
-========================================================= */
+const FACE_SIZE =
+112;
 
-let scrfdSession = null;
-let arcfaceSession = null;
 
-let video = null;
-let overlay = null;
-let overlayCtx = null;
+const DET_THRESHOLD =
+0.50;
 
-let currentMode = "register";
 
-let cameraStream = null;
+const NMS_THRESHOLD =
+0.40;
 
-let latestEmbedding = null;
-let latestFace = null;
 
-let modelsReady = false;
-let running = false;
-let inferenceBusy = false;
-
-let lastAttendanceRequest = 0;
-let attendanceRequestBusy = false;
+const STRIDES =
+[8,16,32];
 
 
 /* =========================================================
-   ELEMENT
+   BIẾN
 ========================================================= */
 
-function $(id){
+let scrfdSession =
+null;
+
+let arcfaceSession =
+null;
+
+let cameraStream =
+null;
+
+let currentMode =
+"register";
+
+let modelsReady =
+false;
+
+let running =
+false;
+
+let processing =
+false;
+
+let latestEmbedding =
+null;
+
+let lastRecognition =
+0;
+
+let recognitionBusy =
+false;
+
+
+/* =========================================================
+   LẤY ELEMENT
+========================================================= */
+
+function get(id){
+
     return document.getElementById(id);
+
 }
 
 
 /* =========================================================
-   MODE
+   CHUYỂN MODE
 ========================================================= */
 
 async function switchMode(mode){
 
-    currentMode = mode;
+    currentMode =
+        mode;
 
-    $("btnRegisterMode").classList.toggle(
-        "active",
-        mode === "register"
-    );
 
-    $("btnAttendanceMode").classList.toggle(
-        "active",
-        mode === "attendance"
-    );
+    get("registerModeButton")
+        .classList
+        .toggle(
+            "active",
+            mode === "register"
+        );
 
-    $("registerPanel").classList.toggle(
-        "hidden",
-        mode !== "register"
-    );
 
-    $("attendancePanel").classList.toggle(
-        "hidden",
-        mode !== "attendance"
-    );
+    get("attendanceModeButton")
+        .classList
+        .toggle(
+            "active",
+            mode === "attendance"
+        );
 
-    latestEmbedding = null;
-    latestFace = null;
 
-    if(mode === "register"){
+    get("registerPanel")
+        .classList
+        .toggle(
+            "hidden",
+            mode !== "register"
+        );
 
-        video = $("video");
-        overlay = $("overlay");
 
-        overlayCtx =
-            overlay.getContext("2d");
+    get("attendancePanel")
+        .classList
+        .toggle(
+            "hidden",
+            mode !== "attendance"
+        );
 
-        $("registerStatus").textContent =
-            "Đưa khuôn mặt vào camera.";
 
-    }else{
+    latestEmbedding =
+        null;
 
-        video = $("videoAttendance");
-        overlay = $("overlayAttendance");
 
-        overlayCtx =
-            overlay.getContext("2d");
+    if(mode === "attendance"){
 
-        $("attendanceStatus").textContent =
-            "Đưa khuôn mặt vào camera.";
+        get("identityBox")
+            .classList
+            .add("hidden");
 
-        $("identityBox").classList.add("hidden");
-    }
-
-    if(!cameraStream){
-
-        await startCamera();
-
-    }else{
-
-        video.srcObject = cameraStream;
-
-        try{
-            await video.play();
-        }catch(e){}
+        setStatus(
+            "attendanceStatus",
+            "Đưa khuôn mặt vào camera.",
+            "warning"
+        );
 
     }
 
-    resizeOverlay();
+
+    resizeCanvases();
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function setStatus(
+    id,
+    message,
+    type=""
+){
+
+    const element =
+        get(id);
+
+    if(!element){
+        return;
+    }
+
+
+    element.textContent =
+        message;
+
+
+    element.className =
+        "status " +
+        type;
+
 }
 
 
@@ -684,49 +836,67 @@ async function startCamera(){
     try{
 
         cameraStream =
-            await navigator.mediaDevices.getUserMedia({
+            await navigator.mediaDevices
+                .getUserMedia({
 
-                video:{
-                    facingMode:"user",
-                    width:{
-                        ideal:1280
+                    video:{
+                        facingMode:"user",
+                        width:{
+                            ideal:1280
+                        },
+                        height:{
+                            ideal:720
+                        }
                     },
-                    height:{
-                        ideal:720
-                    }
-                },
 
-                audio:false
+                    audio:false
 
-            });
+                });
 
 
-        video.srcObject =
+        get("registerVideo")
+            .srcObject =
             cameraStream;
 
-        await video.play();
 
-        resizeOverlay();
+        get("attendanceVideo")
+            .srcObject =
+            cameraStream;
+
+
+        await get("registerVideo")
+            .play();
+
+
+        await get("attendanceVideo")
+            .play();
+
+
+        resizeCanvases();
+
 
         setStatus(
             "registerStatus",
-            "Camera hoạt động. Đang tìm khuôn mặt...",
+            "🟢 Camera đã hoạt động. Đang tải AI...",
             "success"
         );
+
 
     }catch(error){
 
         console.error(error);
 
+
         setStatus(
             "registerStatus",
-            "❌ Không thể mở camera. Hãy cấp quyền camera cho trình duyệt.",
+            "❌ Không mở được camera. Hãy cấp quyền camera cho trình duyệt.",
             "error"
         );
+
 
         setStatus(
             "attendanceStatus",
-            "❌ Không thể mở camera. Hãy cấp quyền camera cho trình duyệt.",
+            "❌ Không mở được camera.",
             "error"
         );
 
@@ -736,49 +906,47 @@ async function startCamera(){
 
 
 /* =========================================================
-   RESIZE OVERLAY
+   RESIZE CANVAS
 ========================================================= */
 
-function resizeOverlay(){
+function resizeCanvases(){
 
-    if(!video || !overlay){
-        return;
-    }
+    const registerVideo =
+        get("registerVideo");
 
-    const rect =
-        video.getBoundingClientRect();
 
-    overlay.width =
-        rect.width;
+    const registerCanvas =
+        get("registerCanvas");
 
-    overlay.height =
-        rect.height;
+
+    registerCanvas.width =
+        registerVideo.clientWidth;
+
+
+    registerCanvas.height =
+        registerVideo.clientHeight;
+
+
+    const attendanceVideo =
+        get("attendanceVideo");
+
+
+    const attendanceCanvas =
+        get("attendanceCanvas");
+
+
+    attendanceCanvas.width =
+        attendanceVideo.clientWidth;
+
+
+    attendanceCanvas.height =
+        attendanceVideo.clientHeight;
+
 }
 
 
 /* =========================================================
-   STATUS
-========================================================= */
-
-function setStatus(
-    id,
-    text,
-    type=""
-){
-
-    const el = $(id);
-
-    if(!el) return;
-
-    el.textContent = text;
-
-    el.className =
-        "status " + type;
-}
-
-
-/* =========================================================
-   LOAD MODELS
+   LOAD MODEL
 ========================================================= */
 
 async function loadModels(){
@@ -788,31 +956,45 @@ async function loadModels(){
         ort.env.wasm.wasmPaths =
         "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.0/dist/";
 
+
         setStatus(
             "registerStatus",
             "⏳ Đang tải SCRFD...",
             "warning"
         );
 
+
         scrfdSession =
             await ort.InferenceSession.create(
                 SCRFD_MODEL,
                 {
-                    executionProviders:["wasm"],
-                    graphOptimizationLevel:"all"
+                    executionProviders:[
+                        "wasm"
+                    ],
+                    graphOptimizationLevel:
+                        "all"
                 }
             );
 
 
-        $("scrfdBadge").textContent =
+        get("registerScrfd")
+            .textContent =
             "🟢 SCRFD HOẠT ĐỘNG";
 
-        $("scrfdBadge").classList.add("ok");
 
-        $("scrfdBadgeAttendance").textContent =
+        get("registerScrfd")
+            .classList
+            .add("ok");
+
+
+        get("attendanceScrfd")
+            .textContent =
             "🟢 SCRFD HOẠT ĐỘNG";
 
-        $("scrfdBadgeAttendance").classList.add("ok");
+
+        get("attendanceScrfd")
+            .classList
+            .add("ok");
 
 
         setStatus(
@@ -826,65 +1008,99 @@ async function loadModels(){
             await ort.InferenceSession.create(
                 ARCFACE_MODEL,
                 {
-                    executionProviders:["wasm"],
-                    graphOptimizationLevel:"all"
+                    executionProviders:[
+                        "wasm"
+                    ],
+                    graphOptimizationLevel:
+                        "all"
                 }
             );
 
 
-        $("arcBadge").textContent =
+        get("registerArcface")
+            .textContent =
             "🟢 ARCFACE HOẠT ĐỘNG";
 
-        $("arcBadge").classList.add("ok");
 
-        $("arcBadgeAttendance").textContent =
+        get("registerArcface")
+            .classList
+            .add("ok");
+
+
+        get("attendanceArcface")
+            .textContent =
             "🟢 ARCFACE HOẠT ĐỘNG";
 
-        $("arcBadgeAttendance").classList.add("ok");
+
+        get("attendanceArcface")
+            .classList
+            .add("ok");
 
 
-        $("embedBadge").textContent =
-            "🟢 EMBEDDING 512 CHIỀU";
-
-        $("embedBadge").classList.add("ok");
-
-        $("embedBadgeAttendance").textContent =
-            "🟢 EMBEDDING 512 CHIỀU";
-
-        $("embedBadgeAttendance").classList.add("ok");
+        get("registerEmbedding")
+            .textContent =
+            "🟢 EMBEDDING 512D";
 
 
-        modelsReady = true;
+        get("registerEmbedding")
+            .classList
+            .add("ok");
+
+
+        get("attendanceEmbedding")
+            .textContent =
+            "🟢 EMBEDDING 512D";
+
+
+        get("attendanceEmbedding")
+            .classList
+            .add("ok");
+
+
+        modelsReady =
+            true;
+
 
         setStatus(
             "registerStatus",
-            "✅ AI đã sẵn sàng. Đưa khuôn mặt vào giữa khung.",
+            "✅ AI đã sẵn sàng. Đưa khuôn mặt vào giữa camera.",
             "success"
         );
 
 
         console.log(
-            "SCRFD inputs:",
-            scrfdSession.inputNames,
+            "SCRFD INPUT:",
+            scrfdSession.inputNames
+        );
+
+
+        console.log(
+            "SCRFD OUTPUT:",
             scrfdSession.outputNames
         );
 
+
         console.log(
-            "ArcFace inputs:",
-            arcfaceSession.inputNames,
-            arcfaceSession.outputNames
+            "ARCFACE INPUT:",
+            arcfaceSession.inputNames
         );
 
 
-        startInferenceLoop();
+        console.log(
+            "ARCFACE OUTPUT:",
+            arcfaceSession.outputNames
+        );
+
 
     }catch(error){
 
         console.error(error);
 
+
         setStatus(
             "registerStatus",
-            "❌ Không tải được AI model: " + error.message,
+            "❌ Không tải được AI: " +
+            error.message,
             "error"
         );
 
@@ -894,48 +1110,66 @@ async function loadModels(){
 
 
 /* =========================================================
-   VIDEO → 640x640 LETTERBOX
+   LETTERBOX
 ========================================================= */
 
-function createLetterbox(){
+function makeLetterbox(video){
 
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
+    const width =
+        video.videoWidth;
 
-    if(!vw || !vh){
+
+    const height =
+        video.videoHeight;
+
+
+    if(
+        !width ||
+        !height
+    ){
         return null;
     }
 
 
     const scale =
         Math.min(
-            INPUT_SIZE / vw,
-            INPUT_SIZE / vh
+            DET_SIZE / width,
+            DET_SIZE / height
         );
 
 
-    const nw =
-        Math.round(vw * scale);
+    const newWidth =
+        Math.round(
+            width * scale
+        );
 
-    const nh =
-        Math.round(vh * scale);
+
+    const newHeight =
+        Math.round(
+            height * scale
+        );
 
 
     const padX =
-        (INPUT_SIZE - nw) / 2;
+        (DET_SIZE-newWidth)/2;
+
 
     const padY =
-        (INPUT_SIZE - nh) / 2;
+        (DET_SIZE-newHeight)/2;
 
 
     const canvas =
-        document.createElement("canvas");
+        document.createElement(
+            "canvas"
+        );
+
 
     canvas.width =
-        INPUT_SIZE;
+        DET_SIZE;
+
 
     canvas.height =
-        INPUT_SIZE;
+        DET_SIZE;
 
 
     const ctx =
@@ -945,11 +1179,12 @@ function createLetterbox(){
     ctx.fillStyle =
         "rgb(127,127,127)";
 
+
     ctx.fillRect(
         0,
         0,
-        INPUT_SIZE,
-        INPUT_SIZE
+        DET_SIZE,
+        DET_SIZE
     );
 
 
@@ -957,97 +1192,105 @@ function createLetterbox(){
         video,
         0,
         0,
-        vw,
-        vh,
+        width,
+        height,
         padX,
         padY,
-        nw,
-        nh
+        newWidth,
+        newHeight
     );
 
 
     return {
+
         canvas,
         scale,
         padX,
-        padY,
-        originalWidth:vw,
-        originalHeight:vh
+        padY
+
     };
+
 }
 
 
 /* =========================================================
-   CANVAS → RGB FLOAT
+   CANVAS → SCRFD TENSOR
 ========================================================= */
 
-function canvasToRGBFloat(canvas){
+function canvasToSCRFDTensor(
+    canvas
+){
 
     const ctx =
         canvas.getContext("2d");
+
 
     const image =
         ctx.getImageData(
             0,
             0,
-            canvas.width,
-            canvas.height
+            DET_SIZE,
+            DET_SIZE
         );
 
-    const data =
+
+    const pixels =
         image.data;
 
 
-    const chw =
+    const size =
+        DET_SIZE *
+        DET_SIZE;
+
+
+    const data =
         new Float32Array(
-            3 *
-            canvas.width *
-            canvas.height
+            size*3
         );
 
 
-    const plane =
-        canvas.width *
-        canvas.height;
+    for(
+        let i=0,
+        p=0;
+        i<pixels.length;
+        i+=4,
+        p++
+    ){
+
+        data[p] =
+            (
+                pixels[i] -
+                127.5
+            ) /
+            128.0;
 
 
-    let p = 0;
+        data[size+p] =
+            (
+                pixels[i+1] -
+                127.5
+            ) /
+            128.0;
 
 
-    for(let i=0;i<data.length;i+=4){
-
-        const r =
-            data[i];
-
-        const g =
-            data[i+1];
-
-        const b =
-            data[i+2];
-
-
-        chw[p] =
-            (r - 127.5) / 128.0;
-
-        chw[plane+p] =
-            (g - 127.5) / 128.0;
-
-        chw[plane*2+p] =
-            (b - 127.5) / 128.0;
-
-        p++;
+        data[size*2+p] =
+            (
+                pixels[i+2] -
+                127.5
+            ) /
+            128.0;
 
     }
 
 
     return new ort.Tensor(
         "float32",
-        chw,
+        data,
         [
             1,
             3,
-            canvas.height,
-            canvas.width
+            DET_SIZE,
+            DET_SIZE
         ]
     );
 
@@ -1055,39 +1298,165 @@ function canvasToRGBFloat(canvas){
 
 
 /* =========================================================
-   GET OUTPUT
+   CANVAS → ARCFACE TENSOR
+========================================================= */
+
+function canvasToArcFaceTensor(
+    canvas
+){
+
+    const ctx =
+        canvas.getContext("2d");
+
+
+    const image =
+        ctx.getImageData(
+            0,
+            0,
+            FACE_SIZE,
+            FACE_SIZE
+        );
+
+
+    const pixels =
+        image.data;
+
+
+    const size =
+        FACE_SIZE *
+        FACE_SIZE;
+
+
+    const data =
+        new Float32Array(
+            size*3
+        );
+
+
+    for(
+        let i=0,
+        p=0;
+        i<pixels.length;
+        i+=4,
+        p++
+    ){
+
+        data[p] =
+            (
+                pixels[i] -
+                127.5
+            ) /
+            127.5;
+
+
+        data[size+p] =
+            (
+                pixels[i+1] -
+                127.5
+            ) /
+            127.5;
+
+
+        data[size*2+p] =
+            (
+                pixels[i+2] -
+                127.5
+            ) /
+            127.5;
+
+    }
+
+
+    return new ort.Tensor(
+        "float32",
+        data,
+        [
+            1,
+            3,
+            FACE_SIZE,
+            FACE_SIZE
+        ]
+    );
+
+}
+
+
+/* =========================================================
+   OUTPUT FIND
 ========================================================= */
 
 function findOutput(
     outputs,
-    words
+    names
 ){
 
     const keys =
         Object.keys(outputs);
 
-    for(const key of keys){
 
-        const low =
+    for(
+        const key of keys
+    ){
+
+        const lower =
             key.toLowerCase();
 
-        if(words.some(
-            w => low.includes(w)
-        )){
-            return outputs[key];
+
+        for(
+            const name of names
+        ){
+
+            if(
+                lower ===
+                name.toLowerCase()
+            ){
+
+                return outputs[key];
+
+            }
+
         }
 
     }
 
+
+    for(
+        const key of keys
+    ){
+
+        const lower =
+            key.toLowerCase();
+
+
+        for(
+            const name of names
+        ){
+
+            if(
+                lower.includes(
+                    name.toLowerCase()
+                )
+            ){
+
+                return outputs[key];
+
+            }
+
+        }
+
+    }
+
+
     return null;
+
 }
 
 
 /* =========================================================
-   TENSOR TO ROWS
+   TENSOR ROWS
 ========================================================= */
 
-function tensorToRows(
+function tensorRows(
     tensor,
     channels
 ){
@@ -1100,6 +1469,7 @@ function tensorToRows(
     const dims =
         tensor.dims;
 
+
     const data =
         tensor.data;
 
@@ -1109,24 +1479,31 @@ function tensorToRows(
     */
 
     if(
-        dims.length === 3
-        &&
+        dims.length === 3 &&
         dims[0] === 1
     ){
 
         const n =
             dims[1];
 
+
         const c =
             dims[2];
 
 
-        const rows = [];
+        const rows =
+            [];
 
-        for(let i=0;i<n;i++){
+
+        for(
+            let i=0;
+            i<n;
+            i++
+        ){
 
             const row =
                 new Array(channels);
+
 
             for(
                 let j=0;
@@ -1143,9 +1520,11 @@ function tensorToRows(
 
             }
 
+
             rows.push(row);
 
         }
+
 
         return rows;
 
@@ -1156,13 +1535,17 @@ function tensorToRows(
        [1,C,H,W]
     */
 
-    if(dims.length === 4){
+    if(
+        dims.length === 4
+    ){
 
         const c =
             dims[1];
 
+
         const h =
             dims[2];
+
 
         const w =
             dims[3];
@@ -1170,18 +1553,13 @@ function tensorToRows(
 
         const anchors =
             Math.floor(
-                c / channels
+                c/channels
             );
 
 
-        if(
-            anchors < 1
-        ){
-            return [];
-        }
+        const rows =
+            [];
 
-
-        const rows = [];
 
         for(
             let y=0;
@@ -1202,7 +1580,10 @@ function tensorToRows(
                 ){
 
                     const row =
-                        new Array(channels);
+                        new Array(
+                            channels
+                        );
+
 
                     for(
                         let j=0;
@@ -1213,17 +1594,20 @@ function tensorToRows(
                         const channel =
                             a*channels+j;
 
-                        const idx =
-                            channel*h*w+
-                            y*w+
+
+                        const index =
+                            channel*h*w +
+                            y*w +
                             x;
+
 
                         row[j] =
                             Number(
-                                data[idx]
+                                data[index]
                             );
 
                     }
+
 
                     rows.push(row);
 
@@ -1232,6 +1616,7 @@ function tensorToRows(
             }
 
         }
+
 
         return rows;
 
@@ -1247,7 +1632,9 @@ function tensorToRows(
    SCORE ROWS
 ========================================================= */
 
-function scoreRows(tensor){
+function scoreRows(
+    tensor
+){
 
     if(!tensor){
         return [];
@@ -1257,62 +1644,66 @@ function scoreRows(tensor){
     const dims =
         tensor.dims;
 
+
     const data =
         tensor.data;
 
 
     /*
        [1,N,1]
-       hoặc
-       [1,N,2]
+       hoặc [1,N,2]
     */
 
     if(
-        dims.length === 3
-        &&
+        dims.length === 3 &&
         dims[0] === 1
     ){
 
         const n =
             dims[1];
 
+
         const c =
             dims[2];
 
 
-        const result = [];
+        const scores =
+            [];
 
-        for(let i=0;i<n;i++){
 
-            let score;
+        for(
+            let i=0;
+            i<n;
+            i++
+        ){
 
             if(c === 1){
 
-                score =
+                scores.push(
                     Number(
                         data[i]
-                    );
+                    )
+                );
 
             }else{
 
-                /*
-                   SCRFD thường có 2 anchor.
-                   Lấy score anchor 0/1.
-                */
-
-                score =
+                scores.push(
                     Math.max(
-                        Number(data[i*c]),
-                        Number(data[i*c+1] || 0)
-                    );
+                        Number(
+                            data[i*c]
+                        ),
+                        Number(
+                            data[i*c+1]
+                        )
+                    )
+                );
 
             }
 
-            result.push(score);
-
         }
 
-        return result;
+
+        return scores;
 
     }
 
@@ -1321,23 +1712,24 @@ function scoreRows(tensor){
        [1,C,H,W]
     */
 
-    if(dims.length === 4){
+    if(
+        dims.length === 4
+    ){
 
         const c =
             dims[1];
 
+
         const h =
             dims[2];
+
 
         const w =
             dims[3];
 
 
-        const anchors =
-            c;
-
-
-        const result = [];
+        const scores =
+            [];
 
 
         for(
@@ -1354,17 +1746,20 @@ function scoreRows(tensor){
 
                 for(
                     let a=0;
-                    a<anchors;
+                    a<c;
                     a++
                 ){
 
-                    const idx =
-                        a*h*w+
-                        y*w+
+                    const index =
+                        a*h*w +
+                        y*w +
                         x;
 
-                    result.push(
-                        Number(data[idx])
+
+                    scores.push(
+                        Number(
+                            data[index]
+                        )
                     );
 
                 }
@@ -1373,7 +1768,8 @@ function scoreRows(tensor){
 
         }
 
-        return result;
+
+        return scores;
 
     }
 
@@ -1387,7 +1783,10 @@ function scoreRows(tensor){
    IOU
 ========================================================= */
 
-function iou(a,b){
+function calculateIoU(
+    a,
+    b
+){
 
     const x1 =
         Math.max(
@@ -1395,17 +1794,20 @@ function iou(a,b){
             b.x1
         );
 
+
     const y1 =
         Math.max(
             a.y1,
             b.y1
         );
 
+
     const x2 =
         Math.min(
             a.x2,
             b.x2
         );
+
 
     const y2 =
         Math.min(
@@ -1414,21 +1816,22 @@ function iou(a,b){
         );
 
 
-    const w =
+    const width =
         Math.max(
             0,
             x2-x1
         );
 
-    const h =
+
+    const height =
         Math.max(
             0,
             y2-y1
         );
 
 
-    const inter =
-        w*h;
+    const intersection =
+        width*height;
 
 
     const areaA =
@@ -1453,12 +1856,12 @@ function iou(a,b){
         );
 
 
-    return inter /
+    return intersection /
         (
             areaA +
             areaB -
-            inter +
-            1e-8
+            intersection +
+            0.000001
         );
 
 }
@@ -1468,17 +1871,21 @@ function iou(a,b){
    NMS
 ========================================================= */
 
-function nms(
+function applyNMS(
     detections
 ){
 
     detections.sort(
-        (a,b) =>
-            b.score-a.score
+        function(a,b){
+
+            return b.score-a.score;
+
+        }
     );
 
 
-    const keep = [];
+    const result =
+        [];
 
 
     while(
@@ -1488,44 +1895,55 @@ function nms(
         const first =
             detections.shift();
 
-        keep.push(first);
+
+        result.push(
+            first
+        );
 
 
         detections =
             detections.filter(
-                d =>
-                    iou(
+                function(item){
+
+                    return calculateIoU(
                         first,
-                        d
+                        item
                     ) <
-                    NMS_THRESHOLD
+                    NMS_THRESHOLD;
+
+                }
             );
 
     }
 
 
-    return keep;
+    return result;
 
 }
 
 
 /* =========================================================
-   SCRFD DETECTION
+   SCRFD DETECT
 ========================================================= */
 
-async function detectFaces(){
+async function detectFace(
+    video
+){
 
-    const lb =
-        createLetterbox();
+    const letterbox =
+        makeLetterbox(
+            video
+        );
 
-    if(!lb){
-        return [];
+
+    if(!letterbox){
+        return null;
     }
 
 
-    const input =
-        canvasToRGBFloat(
-            lb.canvas
+    const tensor =
+        canvasToSCRFDTensor(
+            letterbox.canvas
         );
 
 
@@ -1535,11 +1953,15 @@ async function detectFaces(){
 
     const outputs =
         await scrfdSession.run({
-            [inputName]:input
+
+            [inputName]:
+                tensor
+
         });
 
 
-    const detections = [];
+    const detections =
+        [];
 
 
     for(
@@ -1552,62 +1974,61 @@ async function detectFaces(){
             STRIDES[level];
 
 
-        const scoreTensor =
+        const score =
             findOutput(
                 outputs,
                 [
-                    "score_" + stride,
-                    "score" + stride
+                    "score_"+stride
                 ]
             );
 
 
-        const bboxTensor =
+        const bbox =
             findOutput(
                 outputs,
                 [
-                    "bbox_" + stride,
-                    "bbox" + stride
+                    "bbox_"+stride
                 ]
             );
 
 
-        const kpsTensor =
+        const kps =
             findOutput(
                 outputs,
                 [
-                    "kps_" + stride,
-                    "kps" + stride
+                    "kps_"+stride
                 ]
             );
 
 
         if(
-            !scoreTensor ||
-            !bboxTensor
+            !score ||
+            !bbox
         ){
+
             continue;
+
         }
 
 
         const scores =
             scoreRows(
-                scoreTensor
+                score
             );
 
 
         const boxes =
-            tensorToRows(
-                bboxTensor,
+            tensorRows(
+                bbox,
                 4
             );
 
 
         const keypoints =
-            kpsTensor
+            kps
             ?
-            tensorToRows(
-                kpsTensor,
+            tensorRows(
+                kps,
                 10
             )
             :
@@ -1621,105 +2042,98 @@ async function detectFaces(){
             );
 
 
+        const featureSize =
+            Math.ceil(
+                DET_SIZE /
+                stride
+            );
+
+
         for(
             let i=0;
             i<count;
             i++
         ){
 
-            const score =
+            const confidence =
                 scores[i];
 
 
             if(
-                score <
+                confidence <
                 DET_THRESHOLD
             ){
+
                 continue;
+
             }
 
 
-            const b =
+            const box =
                 boxes[i];
 
 
-            const anchor =
-                i %
-                (
-                    Math.ceil(
-                        INPUT_SIZE /
-                        stride
-                    ) *
-                    Math.ceil(
-                        INPUT_SIZE /
-                        stride
-                    ) *
-                    2
-                );
-
-
             /*
-               Tọa độ anchor.
-               Dùng index theo grid.
+               2 anchors/cell
             */
 
-            const feature =
-                Math.ceil(
-                    INPUT_SIZE /
-                    stride
-                );
-
-
-            const perCell =
-                2;
-
-
-            const cellIndex =
+            const cell =
                 Math.floor(
-                    i / perCell
+                    i/2
                 );
 
 
-            const anchorIndex =
-                i % perCell;
+            const anchor =
+                i%2;
 
 
             const gridX =
-                cellIndex %
-                feature;
+                cell %
+                featureSize;
+
 
             const gridY =
                 Math.floor(
-                    cellIndex /
-                    feature
+                    cell /
+                    featureSize
                 );
 
 
-            const cx =
-                gridX * stride;
+            const centerX =
+                gridX *
+                stride;
 
-            const cy =
-                gridY * stride;
+
+            const centerY =
+                gridY *
+                stride;
 
 
             const x1 =
-                cx -
-                b[0] * stride;
+                centerX -
+                box[0] *
+                stride;
+
 
             const y1 =
-                cy -
-                b[1] * stride;
+                centerY -
+                box[1] *
+                stride;
+
 
             const x2 =
-                cx +
-                b[2] * stride;
+                centerX +
+                box[2] *
+                stride;
+
 
             const y2 =
-                cy +
-                b[3] * stride;
+                centerY +
+                box[3] *
+                stride;
 
 
-            const det = {
+            const detection = {
 
                 x1:
                     Math.max(
@@ -1735,42 +2149,46 @@ async function detectFaces(){
 
                 x2:
                     Math.min(
-                        INPUT_SIZE,
+                        DET_SIZE,
                         x2
                     ),
 
                 y2:
                     Math.min(
-                        INPUT_SIZE,
+                        DET_SIZE,
                         y2
                     ),
 
-                score,
+                score:
+                    confidence,
 
                 keypoints:
-                    keypoints[i] || null,
-
-                scale:
-                    lb.scale,
+                    keypoints[i] ||
+                    null,
 
                 padX:
-                    lb.padX,
+                    letterbox.padX,
 
                 padY:
-                    lb.padY
+                    letterbox.padY,
+
+                scale:
+                    letterbox.scale,
+
+                anchor
 
             };
 
 
             if(
-                det.x2 >
-                det.x1 &&
-                det.y2 >
-                det.y1
+                detection.x2 >
+                detection.x1 &&
+                detection.y2 >
+                detection.y1
             ){
 
                 detections.push(
-                    det
+                    detection
                 );
 
             }
@@ -1780,50 +2198,94 @@ async function detectFaces(){
     }
 
 
-    return nms(
-        detections
+    const filtered =
+        applyNMS(
+            detections
+        );
+
+
+    if(
+        filtered.length === 0
+    ){
+
+        return null;
+
+    }
+
+
+    /*
+       Chọn khuôn mặt lớn nhất
+    */
+
+    filtered.sort(
+        function(a,b){
+
+            const areaA =
+                (
+                    a.x2-a.x1
+                ) *
+                (
+                    a.y2-a.y1
+                );
+
+
+            const areaB =
+                (
+                    b.x2-b.x1
+                ) *
+                (
+                    b.y2-b.y1
+                );
+
+
+            return areaB-areaA;
+
+        }
     );
+
+
+    return filtered[0];
 
 }
 
 
 /* =========================================================
-   DETECTION → ORIGINAL VIDEO
+   DETECTION → VIDEO
 ========================================================= */
 
 function detectionToVideo(
-    det
+    detection
 ){
 
     return {
 
         x1:
             (
-                det.x1 -
-                det.padX
+                detection.x1 -
+                detection.padX
             ) /
-            det.scale,
+            detection.scale,
 
         y1:
             (
-                det.y1 -
-                det.padY
+                detection.y1 -
+                detection.padY
             ) /
-            det.scale,
+            detection.scale,
 
         x2:
             (
-                det.x2 -
-                det.padX
+                detection.x2 -
+                detection.padX
             ) /
-            det.scale,
+            detection.scale,
 
         y2:
             (
-                det.y2 -
-                det.padY
+                detection.y2 -
+                detection.padY
             ) /
-            det.scale
+            detection.scale
 
     };
 
@@ -1831,101 +2293,131 @@ function detectionToVideo(
 
 
 /* =========================================================
-   DRAW FACE
+   VẼ KHUNG
 ========================================================= */
 
 function drawDetection(
-    det
+    detection,
+    canvas
 ){
 
-    if(
-        !overlayCtx ||
-        !overlay
-    ){
-        return;
-    }
+    const ctx =
+        canvas.getContext("2d");
 
 
-    overlayCtx.clearRect(
+    ctx.clearRect(
         0,
         0,
-        overlay.width,
-        overlay.height
+        canvas.width,
+        canvas.height
     );
 
 
-    if(!det){
+    if(!detection){
         return;
     }
+
+
+    const video =
+        currentMode === "register"
+        ?
+        get("registerVideo")
+        :
+        get("attendanceVideo");
 
 
     const rect =
         detectionToVideo(
-            det
+            detection
         );
 
 
-    const vw =
+    const videoWidth =
         video.videoWidth;
 
-    const vh =
+
+    const videoHeight =
         video.videoHeight;
 
 
-    const sx =
-        overlay.width /
-        vw;
+    if(
+        !videoWidth ||
+        !videoHeight
+    ){
 
-    const sy =
-        overlay.height /
-        vh;
+        return;
+
+    }
+
+
+    const scaleX =
+        canvas.width /
+        videoWidth;
+
+
+    const scaleY =
+        canvas.height /
+        videoHeight;
 
 
     /*
-       Video đang mirror.
-       Chuyển X sang vị trí hiển thị.
+       Vì video CSS mirror,
+       X phải đảo chiều.
     */
 
     const x =
-        overlay.width -
-        rect.x2*sx;
+        canvas.width -
+        rect.x2 *
+        scaleX;
+
 
     const y =
-        rect.y1*sy;
-
-    const w =
-        (rect.x2-
-        rect.x1)*sx;
-
-    const h =
-        (rect.y2-
-        rect.y1)*sy;
+        rect.y1 *
+        scaleY;
 
 
-    overlayCtx.strokeStyle =
+    const width =
+        (
+            rect.x2-
+            rect.x1
+        ) *
+        scaleX;
+
+
+    const height =
+        (
+            rect.y2-
+            rect.y1
+        ) *
+        scaleY;
+
+
+    ctx.strokeStyle =
         "#00ff66";
 
-    overlayCtx.lineWidth =
+
+    ctx.lineWidth =
         4;
 
-    overlayCtx.strokeRect(
+
+    ctx.strokeRect(
         x,
         y,
-        w,
-        h
+        width,
+        height
     );
 
 
     /*
-       5 keypoints
+       5 điểm khuôn mặt
     */
 
     if(
-        det.keypoints &&
-        det.keypoints.length >= 10
+        detection.keypoints &&
+        detection.keypoints.length >= 10
     ){
 
-        overlayCtx.fillStyle =
+        ctx.fillStyle =
             "#00ff66";
 
 
@@ -1936,42 +2428,48 @@ function drawDetection(
         ){
 
             const kx =
-                det.keypoints[
+                detection.keypoints[
                     i*2
                 ];
 
+
             const ky =
-                det.keypoints[
+                detection.keypoints[
                     i*2+1
                 ];
 
 
-            const ox =
+            const originalX =
                 (
                     kx -
-                    det.padX
+                    detection.padX
                 ) /
-                det.scale;
+                detection.scale;
 
-            const oy =
+
+            const originalY =
                 (
                     ky -
-                    det.padY
+                    detection.padY
                 ) /
-                det.scale;
+                detection.scale;
 
 
             const px =
-                overlay.width -
-                ox*sx;
+                canvas.width -
+                originalX *
+                scaleX;
+
 
             const py =
-                oy*sy;
+                originalY *
+                scaleY;
 
 
-            overlayCtx.beginPath();
+            ctx.beginPath();
 
-            overlayCtx.arc(
+
+            ctx.arc(
                 px,
                 py,
                 5,
@@ -1979,7 +2477,8 @@ function drawDetection(
                 Math.PI*2
             );
 
-            overlayCtx.fill();
+
+            ctx.fill();
 
         }
 
@@ -1989,57 +2488,56 @@ function drawDetection(
 
 
 /* =========================================================
-   CROP FACE
+   CROP KHUÔN MẶT
 ========================================================= */
 
-async function createFaceCrop(
-    det
+function cropFace(
+    video,
+    detection
 ){
 
     const rect =
         detectionToVideo(
-            det
+            detection
         );
 
 
-    const vw =
-        video.videoWidth;
-
-    const vh =
-        video.videoHeight;
-
-
-    const faceW =
+    const width =
         rect.x2-
         rect.x1;
 
-    const faceH =
+
+    const height =
         rect.y2-
         rect.y1;
 
 
-    /*
-       Padding 25%
-    */
+    const paddingX =
+        width*0.25;
 
-    const padX =
-        faceW*0.25;
 
-    const padY =
-        faceH*0.25;
+    const paddingY =
+        height*0.25;
 
 
     let x =
-        rect.x1-padX;
+        rect.x1 -
+        paddingX;
+
 
     let y =
-        rect.y1-padY;
+        rect.y1 -
+        paddingY;
+
 
     let w =
-        faceW+padX*2;
+        width +
+        paddingX*2;
+
 
     let h =
-        faceH+padY*2;
+        height +
+        paddingY*2;
 
 
     x =
@@ -2047,6 +2545,7 @@ async function createFaceCrop(
             0,
             x
         );
+
 
     y =
         Math.max(
@@ -2057,13 +2556,14 @@ async function createFaceCrop(
 
     w =
         Math.min(
-            vw-x,
+            video.videoWidth-x,
             w
         );
 
+
     h =
         Math.min(
-            vh-y,
+            video.videoHeight-y,
             h
         );
 
@@ -2076,6 +2576,7 @@ async function createFaceCrop(
 
     canvas.width =
         FACE_SIZE;
+
 
     canvas.height =
         FACE_SIZE;
@@ -2106,15 +2607,15 @@ async function createFaceCrop(
 
 
 /* =========================================================
-   ARCFACE EMBEDDING
+   ARCFACE
 ========================================================= */
 
-async function getEmbedding(
+async function createEmbedding(
     faceCanvas
 ){
 
-    const input =
-        canvasToRGBFloat(
+    const tensor =
+        canvasToArcFaceTensor(
             faceCanvas
         );
 
@@ -2125,7 +2626,10 @@ async function getEmbedding(
 
     const outputs =
         await arcfaceSession.run({
-            [inputName]:input
+
+            [inputName]:
+                tensor
+
         });
 
 
@@ -2152,11 +2656,8 @@ async function getEmbedding(
     }
 
 
-    /*
-       L2 normalize
-    */
-
-    let norm = 0;
+    let norm =
+        0;
 
 
     for(
@@ -2166,14 +2667,16 @@ async function getEmbedding(
     ){
 
         norm +=
-            raw[i]*
+            raw[i] *
             raw[i];
 
     }
 
 
     norm =
-        Math.sqrt(norm);
+        Math.sqrt(
+            norm
+        );
 
 
     const embedding =
@@ -2207,26 +2710,28 @@ async function getEmbedding(
    FLOAT32 → BASE64
 ========================================================= */
 
-function float32ToBase64(
-    float32
+function embeddingToBase64(
+    embedding
 ){
 
     const bytes =
         new Uint8Array(
-            float32.buffer
+            embedding.buffer
         );
 
 
-    let binary = "";
+    let binary =
+        "";
 
-    const chunk =
+
+    const chunkSize =
         0x8000;
 
 
     for(
         let i=0;
         i<bytes.length;
-        i+=chunk
+        i+=chunkSize
     ){
 
         binary +=
@@ -2235,7 +2740,7 @@ function float32ToBase64(
                 bytes.subarray(
                     i,
                     Math.min(
-                        i+chunk,
+                        i+chunkSize,
                         bytes.length
                     )
                 )
@@ -2252,193 +2757,162 @@ function float32ToBase64(
 
 
 /* =========================================================
-   INFERENCE LOOP
+   VÒNG NHẬN DIỆN
 ========================================================= */
 
-async function startInferenceLoop(){
+async function processCamera(){
 
-    if(running){
+    if(
+        !modelsReady ||
+        processing ||
+        !cameraStream
+    ){
+
         return;
+
     }
 
 
-    running = true;
+    const video =
+        currentMode === "register"
+        ?
+        get("registerVideo")
+        :
+        get("attendanceVideo");
 
 
-    while(running){
+    if(
+        video.readyState <
+        3
+    ){
 
-        if(
-            !modelsReady ||
-            !video ||
-            video.readyState < 3 ||
-            inferenceBusy
-        ){
+        return;
 
-            await sleep(100);
-
-            continue;
-
-        }
+    }
 
 
-        inferenceBusy = true;
+    processing =
+        true;
 
 
-        try{
+    try{
 
-            const faces =
-                await detectFaces();
-
-
-            /*
-               Chọn khuôn mặt lớn nhất
-            */
-
-            let best = null;
-
-
-            for(
-                const face of faces
-            ){
-
-                const area =
-                    (
-                        face.x2-
-                        face.x1
-                    ) *
-                    (
-                        face.y2-
-                        face.y1
-                    );
-
-
-                if(
-                    !best ||
-                    area >
-                    best.area
-                ){
-
-                    best = {
-
-                        ...face,
-
-                        area
-
-                    };
-
-                }
-
-            }
-
-
-            latestFace =
-                best;
-
-
-            drawDetection(
-                best
+        const detection =
+            await detectFace(
+                video
             );
 
 
-            if(!best){
+        const canvas =
+            currentMode === "register"
+            ?
+            get("registerCanvas")
+            :
+            get("attendanceCanvas");
 
-                latestEmbedding =
-                    null;
+
+        drawDetection(
+            detection,
+            canvas
+        );
 
 
-                if(
-                    currentMode ===
-                    "register"
-                ){
+        if(!detection){
 
-                    setStatus(
-                        "registerStatus",
-                        "🔎 Chưa phát hiện khuôn mặt.",
-                        "warning"
-                    );
+            latestEmbedding =
+                null;
 
-                    $("saveButton").disabled =
-                        true;
 
-                }else{
+            if(
+                currentMode ===
+                "register"
+            ){
 
-                    setStatus(
-                        "attendanceStatus",
-                        "🔎 Đưa khuôn mặt vào giữa camera.",
-                        "warning"
-                    );
+                get("saveFaceButton")
+                    .disabled =
+                    true;
 
-                }
 
+                setStatus(
+                    "registerStatus",
+                    "🔎 Chưa phát hiện khuôn mặt.",
+                    "warning"
+                );
 
             }else{
 
-                /*
-                   Có mặt → tạo embedding
-                */
-
-                const crop =
-                    await createFaceCrop(
-                        best
-                    );
-
-
-                const embedding =
-                    await getEmbedding(
-                        crop
-                    );
-
-
-                latestEmbedding =
-                    embedding;
-
-
-                if(
-                    currentMode ===
-                    "register"
-                ){
-
-                    $("saveButton").disabled =
-                        false;
-
-
-                    setStatus(
-                        "registerStatus",
-                        "🟢 ĐÃ PHÁT HIỆN KHUÔN MẶT • ARCFACE HOẠT ĐỘNG • FACE ID 512D ĐÃ TẠO",
-                        "success"
-                    );
-
-                }else{
-
-                    setStatus(
-                        "attendanceStatus",
-                        "🟢 Đã nhận diện khuôn mặt. Đang kiểm tra...",
-                        "success"
-                    );
-
-
-                    maybeIdentify(
-                        embedding
-                    );
-
-                }
+                setStatus(
+                    "attendanceStatus",
+                    "🔎 Đưa khuôn mặt vào giữa camera.",
+                    "warning"
+                );
 
             }
 
-        }catch(error){
 
-            console.error(
-                "Inference error:",
-                error
-            );
+            return;
 
         }
 
 
-        inferenceBusy = false;
+        const faceCanvas =
+            cropFace(
+                video,
+                detection
+            );
 
 
-        await sleep(250);
+        const embedding =
+            await createEmbedding(
+                faceCanvas
+            );
+
+
+        latestEmbedding =
+            embedding;
+
+
+        if(
+            currentMode ===
+            "register"
+        ){
+
+            get("saveFaceButton")
+                .disabled =
+                false;
+
+
+            setStatus(
+                "registerStatus",
+                "🟢 ĐÃ PHÁT HIỆN KHUÔN MẶT • ARCFACE HOẠT ĐỘNG • FACE ID 512D ĐÃ TẠO",
+                "success"
+            );
+
+        }else{
+
+            setStatus(
+                "attendanceStatus",
+                "🟢 Đã tạo Face ID. Đang kiểm tra nhân sự...",
+                "success"
+            );
+
+
+            recognizeFace(
+                embedding
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(
+            error
+        );
+
+    }finally{
+
+        processing =
+            false;
 
     }
 
@@ -2446,10 +2920,48 @@ async function startInferenceLoop(){
 
 
 /* =========================================================
-   ĐĂNG KÝ FACE
+   LOOP
 ========================================================= */
 
-function registerFace(){
+function startLoop(){
+
+    if(running){
+        return;
+    }
+
+
+    running =
+        true;
+
+
+    async function loop(){
+
+        if(
+            running
+        ){
+
+            await processCamera();
+
+            setTimeout(
+                loop,
+                300
+            );
+
+        }
+
+    }
+
+
+    loop();
+
+}
+
+
+/* =========================================================
+   ĐĂNG KÝ NHÂN SỰ
+========================================================= */
+
+function saveFace(){
 
     if(!latestEmbedding){
 
@@ -2463,21 +2975,21 @@ function registerFace(){
 
 
     const hoTen =
-        $("hoTen")
-        .value
-        .trim();
+        get("hoTen")
+            .value
+            .trim();
 
 
     const ngheDanh =
-        $("ngheDanh")
-        .value
-        .trim();
+        get("ngheDanh")
+            .value
+            .trim();
 
 
     const nhom =
-        $("nhom")
-        .value
-        .trim();
+        get("nhom")
+            .value
+            .trim();
 
 
     if(!hoTen){
@@ -2486,7 +2998,8 @@ function registerFace(){
             "Vui lòng nhập Họ và tên."
         );
 
-        $("hoTen").focus();
+        get("hoTen")
+            .focus();
 
         return;
 
@@ -2496,10 +3009,11 @@ function registerFace(){
     if(!ngheDanh){
 
         alert(
-            "Vui lòng nhập Nghệ danh."
+            "Vui lòng nhập Nghệ danh / KIRA."
         );
 
-        $("ngheDanh").focus();
+        get("ngheDanh")
+            .focus();
 
         return;
 
@@ -2512,7 +3026,8 @@ function registerFace(){
             "Vui lòng nhập Nhóm."
         );
 
-        $("nhom").focus();
+        get("nhom")
+            .focus();
 
         return;
 
@@ -2520,15 +3035,24 @@ function registerFace(){
 
 
     const faceId =
-        float32ToBase64(
+        embeddingToBase64(
             latestEmbedding
         );
 
 
-    /*
-       Tạo form POST.
-       Không cần CORS.
-    */
+    if(
+        !faceId ||
+        faceId.length < 100
+    ){
+
+        alert(
+            "Face ID không hợp lệ."
+        );
+
+        return;
+
+    }
+
 
     const form =
         document.createElement(
@@ -2539,14 +3063,16 @@ function registerFace(){
     form.method =
         "POST";
 
+
     form.action =
         API_URL;
+
 
     form.target =
         "hiddenFrame";
 
 
-    const fields = {
+    const data = {
 
         action:
             "saveFace",
@@ -2566,23 +3092,27 @@ function registerFace(){
     };
 
 
-    Object.keys(fields)
+    Object.keys(data)
         .forEach(
-            key => {
+            function(key){
 
                 const input =
                     document.createElement(
                         "input"
                     );
 
+
                 input.type =
                     "hidden";
+
 
                 input.name =
                     key;
 
+
                 input.value =
-                    fields[key];
+                    data[key];
+
 
                 form.appendChild(
                     input
@@ -2597,6 +3127,11 @@ function registerFace(){
     );
 
 
+    get("saveFaceButton")
+        .disabled =
+        true;
+
+
     setStatus(
         "registerStatus",
         "⏳ Đang lưu Face ID vào Google Sheet...",
@@ -2604,35 +3139,35 @@ function registerFace(){
     );
 
 
-    $("saveButton").disabled =
-        true;
-
-
     form.submit();
 
 
-    /*
-       Apps Script POST trả về iframe.
-       Cho người dùng một khoảng thời gian xử lý.
-    */
-
     setTimeout(
-        () => {
+        function(){
 
-            document.body.removeChild(
-                form
-            );
+            if(
+                form.parentNode
+            ){
+
+                form.parentNode
+                    .removeChild(
+                        form
+                    );
+
+            }
 
 
             setStatus(
                 "registerStatus",
-                "✅ ĐÃ GỬI DỮ LIỆU ĐĂNG KÝ. Kiểm tra sheet NHÂN_SỰ để xác nhận.",
+                "✅ ĐÃ GỬI FACE ID. Kiểm tra sheet NHÂN_SỰ để xác nhận.",
                 "success"
             );
 
 
-            $("saveButton").disabled =
+            get("saveFaceButton")
+                .disabled =
                 false;
+
 
         },
         2500
@@ -2642,32 +3177,56 @@ function registerFace(){
 
 
 /* =========================================================
-   JSONP NHẬN DIỆN
+   NHẬN DIỆN FACE ID
 ========================================================= */
 
-function identifyFace(
+function recognizeFace(
     embedding
 ){
 
+    const now =
+        Date.now();
+
+
+    /*
+       Không gửi liên tục.
+    */
+
     if(
-        attendanceRequestBusy
+        recognitionBusy
     ){
+
         return;
+
     }
 
 
-    attendanceRequestBusy =
+    if(
+        now-lastRecognition <
+        3000
+    ){
+
+        return;
+
+    }
+
+
+    lastRecognition =
+        now;
+
+
+    recognitionBusy =
         true;
 
 
     const base64 =
-        float32ToBase64(
+        embeddingToBase64(
             embedding
         );
 
 
     const callbackName =
-        "htFaceCallback_" +
+        "htSeaproFace_" +
         Date.now();
 
 
@@ -2675,6 +3234,49 @@ function identifyFace(
         document.createElement(
             "script"
         );
+
+
+    window[
+        callbackName
+    ] =
+    function(result){
+
+        try{
+
+            handleRecognitionResult(
+                result
+            );
+
+        }catch(error){
+
+            console.error(
+                error
+            );
+
+        }
+
+
+        recognitionBusy =
+            false;
+
+
+        delete window[
+            callbackName
+        ];
+
+
+        if(
+            script.parentNode
+        ){
+
+            script.parentNode
+                .removeChild(
+                    script
+                );
+
+        }
+
+    };
 
 
     const params =
@@ -2692,41 +3294,6 @@ function identifyFace(
         });
 
 
-    window[
-        callbackName
-    ] = function(data){
-
-        try{
-
-            processIdentifyResult(
-                data
-            );
-
-        }finally{
-
-            attendanceRequestBusy =
-                false;
-
-            delete window[
-                callbackName
-            ];
-
-            if(
-                script.parentNode
-            ){
-
-                script.parentNode
-                    .removeChild(
-                        script
-                    );
-
-            }
-
-        }
-
-    };
-
-
     script.src =
         API_URL +
         "?" +
@@ -2734,35 +3301,36 @@ function identifyFace(
 
 
     script.onerror =
-        function(){
+    function(){
 
-            attendanceRequestBusy =
-                false;
-
-            setStatus(
-                "attendanceStatus",
-                "❌ Không kết nối được hệ thống nhận diện.",
-                "error"
-            );
+        recognitionBusy =
+            false;
 
 
-            delete window[
-                callbackName
-            ];
+        delete window[
+            callbackName
+        ];
 
 
-            if(
-                script.parentNode
-            ){
+        if(
+            script.parentNode
+        ){
 
-                script.parentNode
-                    .removeChild(
-                        script
-                    );
+            script.parentNode
+                .removeChild(
+                    script
+                );
 
-            }
+        }
 
-        };
+
+        setStatus(
+            "attendanceStatus",
+            "❌ Không kết nối được Google Apps Script.",
+            "error"
+        );
+
+    };
 
 
     document.body.appendChild(
@@ -2773,53 +3341,14 @@ function identifyFace(
 
 
 /* =========================================================
-   GIỚI HẠN REQUEST
-========================================================= */
-
-function maybeIdentify(
-    embedding
-){
-
-    const now =
-        Date.now();
-
-
-    /*
-       Không gửi quá liên tục.
-    */
-
-    if(
-        now -
-        lastAttendanceRequest
-        <
-        2500
-    ){
-
-        return;
-
-    }
-
-
-    lastAttendanceRequest =
-        now;
-
-
-    identifyFace(
-        embedding
-    );
-
-}
-
-
-/* =========================================================
    KẾT QUẢ NHẬN DIỆN
 ========================================================= */
 
-function processIdentifyResult(
-    data
+function handleRecognitionResult(
+    result
 ){
 
-    if(!data){
+    if(!result){
 
         return;
 
@@ -2827,15 +3356,15 @@ function processIdentifyResult(
 
 
     if(
-        data.success !== true
+        result.success !== true
     ){
 
         setStatus(
             "attendanceStatus",
             "❌ " +
             (
-                data.message ||
-                "Lỗi nhận diện"
+                result.message ||
+                "Lỗi hệ thống."
             ),
             "error"
         );
@@ -2846,17 +3375,17 @@ function processIdentifyResult(
 
 
     if(
-        data.matched !== true
+        result.matched !== true
     ){
 
-        $("identityBox")
+        get("identityBox")
             .classList
             .add("hidden");
 
 
         setStatus(
             "attendanceStatus",
-            "🟠 Khuôn mặt chưa được đăng ký.",
+            "🟠 KHUÔN MẶT CHƯA ĐƯỢC ĐĂNG KÝ",
             "warning"
         );
 
@@ -2866,43 +3395,40 @@ function processIdentifyResult(
     }
 
 
-    /*
-       Đã tìm thấy nhân sự.
-    */
-
-    $("identityBox")
+    get("identityBox")
         .classList
         .remove("hidden");
 
 
-    $("identityNickname")
+    get("identityNickname")
         .textContent =
-        data.ngheDanh ||
+        result.ngheDanh ||
         "-";
 
 
-    $("identityFullname")
+    get("identityFullname")
         .textContent =
-        data.hoTen ||
+        result.hoTen ||
         "-";
 
 
-    $("identityGroup")
+    get("identityGroup")
         .textContent =
         "Nhóm: " +
         (
-            data.nhom ||
+            result.nhom ||
             "-"
         );
 
 
     const score =
         Number(
-            data.score || 0
+            result.score ||
+            0
         );
 
 
-    $("identityScore")
+    get("identityScore")
         .textContent =
         "Độ tương đồng: " +
         (
@@ -2921,31 +3447,16 @@ function processIdentifyResult(
 
 
 /* =========================================================
-   SLEEP
-========================================================= */
-
-function sleep(
-    ms
-){
-
-    return new Promise(
-        resolve =>
-            setTimeout(
-                resolve,
-                ms
-            )
-    );
-
-}
-
-
-/* =========================================================
-   WINDOW RESIZE
+   RESIZE
 ========================================================= */
 
 window.addEventListener(
     "resize",
-    resizeOverlay
+    function(){
+
+        resizeCanvases();
+
+    }
 );
 
 
@@ -2957,23 +3468,20 @@ window.addEventListener(
     "load",
     async function(){
 
-        /*
-           Mặc định mở ĐĂNG KÝ
-        */
-
-        video =
-            $("video");
-
-        overlay =
-            $("overlay");
-
-        overlayCtx =
-            overlay.getContext("2d");
+        setStatus(
+            "registerStatus",
+            "⏳ Đang mở camera...",
+            "warning"
+        );
 
 
         await startCamera();
 
+
         await loadModels();
+
+
+        startLoop();
 
     }
 );
