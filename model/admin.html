@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>HT SEAPRO - ADMIN</title>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.0/dist/ort.min.js"></script>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    min-height:100vh;
+    background:
+        radial-gradient(circle at top,#12365c 0,#061525 45%,#020811 100%);
+    color:white;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+.container{
+    width:min(1100px,94%);
+    margin:30px auto;
+}
+
+.header{
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.header h1{
+    margin:0;
+    font-size:34px;
+    font-weight:800;
+}
+
+.header p{
+    color:#7fc9ff;
+    margin-top:8px;
+}
+
+.card{
+    background:rgba(5,22,39,.94);
+    border:1px solid #214566;
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+}
+
+.form{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.field label{
+    display:block;
+    color:#8fcfff;
+    font-size:14px;
+    margin-bottom:7px;
+}
+
+.field input{
+    width:100%;
+    height:48px;
+    border-radius:10px;
+    border:1px solid #315979;
+    background:#071726;
+    color:white;
+    padding:0 15px;
+    font-size:16px;
+    outline:none;
+}
+
+.field input:focus{
+    border-color:#00aaff;
+}
+
+.camera-box{
+    width:min(900px,100%);
+    margin:20px auto;
+    position:relative;
+    overflow:hidden;
+    border-radius:18px;
+    background:#000;
+}
+
+video{
+    width:100%;
+    display:block;
+    transform:scaleX(-1);
+}
+
+canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    transform:scaleX(-1);
+}
+
+.status{
+    text-align:center;
+    padding:18px;
+    border-radius:12px;
+    background:#061522;
+    border:1px solid #193b55;
+    margin-top:15px;
+    font-size:18px;
+}
+
+.green{
+    color:#00ff66;
+}
+
+.yellow{
+    color:#ffd43b;
+}
+
+.red{
+    color:#ff4b4b;
+}
+
+.info{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin:15px 0;
+}
+
+.badge{
+    border:1px solid #197c5a;
+    border-radius:30px;
+    padding:10px 16px;
+    color:#00ff72;
+    background:#071e1b;
+}
+
+.buttons{
+    display:flex;
+    justify-content:center;
+    gap:15px;
+    margin-top:20px;
+}
+
+button{
+    border:0;
+    border-radius:12px;
+    padding:15px 28px;
+    font-size:17px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.start{
+    background:#0797ed;
+    color:white;
+}
+
+.save{
+    background:#00c96b;
+    color:white;
+}
+
+.save:disabled{
+    background:#315344;
+    color:#8a9a91;
+    cursor:not-allowed;
+}
+
+.stop{
+    background:#253748;
+    color:white;
+}
+
+.result{
+    text-align:center;
+    margin-top:18px;
+    font-size:20px;
+    font-weight:700;
+}
+
+@media(max-width:750px){
+    .form{
+        grid-template-columns:1fr;
+    }
+
+    .header h1{
+        font-size:26px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🔐 HT SEAPRO - ADMIN</h1>
+        <p>ĐĂNG KÝ NHÂN SỰ • FACE ID 512D</p>
+    </div>
+
+    <div class="card">
+
+        <div class="form">
+
+            <div class="field">
+                <label>HỌ VÀ TÊN</label>
+                <input
+                    id="hoTen"
+                    type="text"
+                    placeholder="Ví dụ: Đoàn Hải Đăng">
+            </div>
+
+            <div class="field">
+                <label>NGHỆ DANH / KIRA</label>
+                <input
+                    id="ngheDanh"
+                    type="text"
+                    placeholder="Ví dụ: Thiên Thần">
+            </div>
+
+            <div class="field">
+                <label>NHÓM</label>
+                <input
+                    id="nhom"
+                    type="text"
+                    placeholder="Ví dụ: Quản lý">
+            </div>
+
+        </div>
+
+
+        <div class="camera-box">
+
+            <video
+                id="video"
+                autoplay
+                muted
+                playsinline>
+            </video>
+
+            <canvas id="canvas"></canvas>
+
+        </div>
+
+
+        <div class="info">
+
+            <div class="badge">
+                🟢 SCRFD
+                <span id="scrfdStatus">
+                    ĐANG TẢI
+                </span>
+            </div>
+
+            <div class="badge">
+                🟢 ARCFACE
+                <span id="arcStatus">
+                    ĐANG TẢI
+                </span>
+            </div>
+
+            <div class="badge">
+                🟢 EMBEDDING
+                <span id="embeddingStatus">
+                    CHƯA CÓ
+                </span>
+            </div>
+
+        </div>
+
+
+        <div
+            id="status"
+            class="status yellow">
+            Đang khởi động hệ thống...
+        </div>
+
+
+        <div class="buttons">
+
+            <button
+                id="startBtn"
+                class="start">
+                📷 MỞ CAMERA
+            </button>
+
+            <button
+                id="saveBtn"
+                class="save"
+                disabled>
+                💾 LƯU FACE ID
+            </button>
+
+            <button
+                id="stopBtn"
+                class="stop">
+                ⏹ DỪNG
+            </button>
+
+        </div>
+
+
+        <div
+            id="result"
+            class="result">
+        </div>
+
+    </div>
+
+</div>
+
+
+<iframe
+    name="hiddenFrame"
+    style="display:none">
+</iframe>
+
+
+<form
+    id="saveForm"
+    method="POST"
+    target="hiddenFrame"
+    style="display:none">
+
+    <input
+        name="action"
+        value="saveFace">
+
+    <input
+        id="formHoTen"
+        name="hoTen">
+
+    <input
+        id="formNgheDanh"
+        name="ngheDanh">
+
+    <input
+        id="formNhom"
+        name="nhom">
+
+    <input
+        id="formFaceId"
+        name="faceId">
+
+</form>
+
+
+<script>
+
+/* =====================================================
+   CONFIG
+===================================================== */
+
+const API_URL =
+'https://script.google.com/macros/s/AKfycbzRwSD1xs75XXNwE_R51TIu_QKrKuon-aEcezM5cbqzevBSuQuhuqkYfN8Ozq_B1CR1/exec';
+
+const SCRFD_MODEL =
+'./model/scrfd_500m_bnkps.onnx';
+
+const ARCFACE_MODEL =
+'./model/w600k_mbf.onnx';
+
+const INPUT_SIZE = 640;
+
+const FACE_SIZE = 112;
+
+const DET_THRESHOLD = 0.50;
+
+const STRIDES = [8,16,32];
+
+
+/* =====================================================
+   DOM
+===================================================== */
+
+const video =
+document.getElementById('video');
+
+const canvas =
+document.getElementById('canvas');
+
+const ctx =
+canvas.getContext('2d');
+
+const statusBox =
+document.getElementById('status');
+
+const resultBox =
+document.getElementById('result');
+
+const saveBtn =
+document.getElementById('saveBtn');
+
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let cameraStream = null;
+
+let scrfdSession = null;
+
+let arcfaceSession = null;
+
+let running = false;
+
+let latestEmbedding = null;
+
+let latestFace = null;
+
+
+/* =====================================================
+   STATUS
+===================================================== */
+
+function setStatus(
+    text,
+    type='yellow'
+){
+
+    statusBox.className =
+        'status ' + type;
+
+    statusBox.textContent =
+        text;
+
+}
+
+
+/* =====================================================
+   INIT MODEL
+===================================================== */
+
+async function loadModels(){
+
+    try{
+
+        setStatus(
+            'Đang tải SCRFD...',
+            'yellow'
+        );
+
+        scrfdSession =
+            await ort.InferenceSession.create(
+                SCRFD_MODEL,
+                {
+                    executionProviders:['wasm']
+                }
+            );
+
+        document.getElementById(
+            'scrfdStatus'
+        ).textContent =
+            'HOẠT ĐỘNG';
+
+
+        setStatus(
+            'Đang tải ArcFace...',
+            'yellow'
+        );
+
+        arcfaceSession =
+            await ort.InferenceSession.create(
+                ARCFACE_MODEL,
+                {
+                    executionProviders:['wasm']
+                }
+            );
+
+        document.getElementById(
+            'arcStatus'
+        ).textContent =
+            'HOẠT ĐỘNG';
+
+
+        setStatus(
+            'Hệ thống sẵn sàng. Bấm MỞ CAMERA.',
+            'green'
+        );
+
+
+    }catch(error){
+
+        console.error(error);
+
+        setStatus(
+            'LỖI TẢI MODEL: ' +
+            error.message,
+            'red'
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   CAMERA
+===================================================== */
+
+async function startCamera(){
+
+    try{
+
+        if(!scrfdSession ||
+           !arcfaceSession){
+
+            setStatus(
+                'Model chưa tải xong.',
+                'red'
+            );
+
+            return;
+
+        }
+
+
+        cameraStream =
+            await navigator.mediaDevices
+            .getUserMedia({
+
+                video:{
+                    width:{
+                        ideal:1280
+                    },
+
+                    height:{
+                        ideal:720
+                    },
+
+                    facingMode:'user'
+
+                },
+
+                audio:false
+
+            });
+
+
+        video.srcObject =
+            cameraStream;
+
+
+        await video.play();
+
+
+        canvas.width =
+            video.videoWidth;
+
+        canvas.height =
+            video.videoHeight;
+
+
+        running = true;
+
+
+        setStatus(
+            'Đang tìm khuôn mặt...',
+            'yellow'
+        );
+
+
+        detectLoop();
+
+
+    }catch(error){
+
+        console.error(error);
+
+        setStatus(
+            'Không mở được camera: ' +
+            error.message,
+            'red'
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   STOP CAMERA
+===================================================== */
+
+function stopCamera(){
+
+    running = false;
+
+
+    if(cameraStream){
+
+        cameraStream
+        .getTracks()
+        .forEach(
+            track => track.stop()
+        );
+
+        cameraStream = null;
+
+    }
+
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    setStatus(
+        'Camera đã dừng.',
+        'yellow'
+    );
+
+}
+
+
+/* =====================================================
+   LETTERBOX
+===================================================== */
+
+function makeLetterbox(
+    source,
+    size
+){
+
+    const scale =
+        Math.min(
+            size / source.width,
+            size / source.height
+        );
+
+
+    const nw =
+        Math.round(
+            source.width * scale
+        );
+
+
+    const nh =
+        Math.round(
+            source.height * scale
+        );
+
+
+    const canvas2 =
+        document.createElement(
+            'canvas'
+        );
+
+    canvas2.width = size;
+
+    canvas2.height = size;
+
+
+    const c =
+        canvas2.getContext('2d');
+
+
+    c.fillStyle =
+        'rgb(127,127,127)';
+
+    c.fillRect(
+        0,
+        0,
+        size,
+        size
+    );
+
+
+    const dx =
+        (size - nw) / 2;
+
+    const dy =
+        (size - nh) / 2;
+
+
+    c.drawImage(
+        source,
+        dx,
+        dy,
+        nw,
+        nh
+    );
+
+
+    return {
+        canvas:canvas2,
+        scale:scale,
+        offsetX:dx,
+        offsetY:dy
+    };
+
+}
+
+
+/* =====================================================
+   CANVAS → TENSOR
+===================================================== */
+
+function canvasToTensor(
+    source
+){
+
+    const image =
+        source
+        .getContext('2d')
+        .getImageData(
+            0,
+            0,
+            source.width,
+            source.height
+        );
+
+
+    const data =
+        new Float32Array(
+            1 *
+            3 *
+            source.width *
+            source.height
+        );
+
+
+    const area =
+        source.width *
+        source.height;
+
+
+    for(
+        let y=0;
+        y<source.height;
+        y++
+    ){
+
+        for(
+            let x=0;
+            x<source.width;
+            x++
+        ){
+
+            const p =
+                (y *
+                source.width +
+                x) * 4;
+
+
+            const i =
+                y *
+                source.width +
+                x;
+
+
+            data[i] =
+                (
+                    image.data[p] -
+                    127.5
+                ) / 128.0;
+
+
+            data[area+i] =
+                (
+                    image.data[p+1] -
+                    127.5
+                ) / 128.0;
+
+
+            data[2*area+i] =
+                (
+                    image.data[p+2] -
+                    127.5
+                ) / 128.0;
+
+        }
+
+    }
+
+
+    return new ort.Tensor(
+        'float32',
+        data,
+        [
+            1,
+            3,
+            source.height,
+            source.width
+        ]
+    );
+
+}
+
+
+/* =====================================================
+   TÌM OUTPUT
+===================================================== */
+
+function findOutput(
+    outputs,
+    text
+){
+
+    const key =
+        Object.keys(outputs)
+        .find(
+            k =>
+            k.toLowerCase()
+            .includes(text)
+        );
+
+    return key
+        ? outputs[key]
+        : null;
+
+}
+
+
+/* =====================================================
+   SCRFD
+===================================================== */
+
+async function detectFace(
+    frame
+){
+
+    const lb =
+        makeLetterbox(
+            frame,
+            INPUT_SIZE
+        );
+
+
+    const input =
+        canvasToTensor(
+            lb.canvas
+        );
+
+
+    const inputName =
+        scrfdSession
+        .inputNames[0];
+
+
+    const outputs =
+        await scrfdSession.run({
+
+            [inputName]:
+                input
+
+        });
+
+
+    const detections = [];
+
+
+    /*
+       SCRFD output chuẩn:
+
+       score_8
+       score_16
+       score_32
+
+       bbox_8
+       bbox_16
+       bbox_32
+    */
+
+
+    for(
+        let si=0;
+        si<STRIDES.length;
+        si++
+    ){
+
+        const stride =
+            STRIDES[si];
+
+
+        const score =
+            findOutput(
+                outputs,
+                'score_' + stride
+            );
+
+
+        const bbox =
+            findOutput(
+                outputs,
+                'bbox_' + stride
+            );
+
+
+        if(
+            !score ||
+            !bbox
+        ){
+            continue;
+        }
+
+
+        const scoreData =
+            score.data;
+
+        const bboxData =
+            bbox.data;
+
+
+        const dims =
+            score.dims;
+
+
+        let count = 0;
+
+
+        if(
+            dims.length === 3
+        ){
+
+            count =
+                dims[1];
+
+        }else if(
+            dims.length === 4
+        ){
+
+            count =
+                dims[2] *
+                dims[3];
+
+        }
+
+
+        /*
+           2 anchors / location
+        */
+
+        for(
+            let i=0;
+            i<count;
+            i++
+        ){
+
+            let s =
+                scoreData[i];
+
+
+            if(
+                scoreData.length >
+                count
+            ){
+
+                s =
+                    scoreData[i];
+
+            }
+
+
+            if(
+                s < DET_THRESHOLD
+            ){
+                continue;
+            }
+
+
+            const gridW =
+                Math.ceil(
+                    INPUT_SIZE /
+                    stride
+                );
+
+
+            const anchor =
+                i % 2;
+
+
+            const cell =
+                Math.floor(
+                    i / 2
+                );
+
+
+            const gx =
+                cell %
+                gridW;
+
+
+            const gy =
+                Math.floor(
+                    cell /
+                    gridW
+                );
+
+
+            const base =
+                i * 4;
+
+
+            if(
+                base + 3 >=
+                bboxData.length
+            ){
+                continue;
+            }
+
+
+            const x1 =
+                (
+                    gx * stride -
+                    bboxData[base] *
+                    stride
+                );
+
+
+            const y1 =
+                (
+                    gy * stride -
+                    bboxData[base+1] *
+                    stride
+                );
+
+
+            const x2 =
+                (
+                    gx * stride +
+                    bboxData[base+2] *
+                    stride
+                );
+
+
+            const y2 =
+                (
+                    gy * stride +
+                    bboxData[base+3] *
+                    stride
+                );
+
+
+            detections.push({
+
+                score:s,
+
+                x1,
+                y1,
+                x2,
+                y2
+
+            });
+
+        }
+
+    }
+
+
+    if(
+        !detections.length
+    ){
+
+        return null;
+
+    }
+
+
+    detections.sort(
+        (a,b) =>
+        b.score -
+        a.score
+    );
+
+
+    const best =
+        detections[0];
+
+
+    /*
+       Chuyển từ 640x640
+       về camera
+    */
+
+    best.x1 =
+        (
+            best.x1 -
+            lb.offsetX
+        ) /
+        lb.scale;
+
+
+    best.y1 =
+        (
+            best.y1 -
+            lb.offsetY
+        ) /
+        lb.scale;
+
+
+    best.x2 =
+        (
+            best.x2 -
+            lb.offsetX
+        ) /
+        lb.scale;
+
+
+    best.y2 =
+        (
+            best.y2 -
+            lb.offsetY
+        ) /
+        lb.scale;
+
+
+    best.x1 =
+        Math.max(
+            0,
+            best.x1
+        );
+
+
+    best.y1 =
+        Math.max(
+            0,
+            best.y1
+        );
+
+
+    best.x2 =
+        Math.min(
+            frame.width,
+            best.x2
+        );
+
+
+    best.y2 =
+        Math.min(
+            frame.height,
+            best.y2
+        );
+
+
+    return best;
+
+}
+
+
+/* =====================================================
+   CROP FACE
+===================================================== */
+
+function cropFace(
+    frame,
+    face
+){
+
+    const w =
+        face.x2 -
+        face.x1;
+
+
+    const h =
+        face.y2 -
+        face.y1;
+
+
+    const padX =
+        w * 0.25;
+
+
+    const padY =
+        h * 0.25;
+
+
+    const x =
+        Math.max(
+            0,
+            face.x1 -
+            padX
+        );
+
+
+    const y =
+        Math.max(
+            0,
+            face.y1 -
+            padY
+        );
+
+
+    const x2 =
+        Math.min(
+            frame.width,
+            face.x2 +
+            padX
+        );
+
+
+    const y2 =
+        Math.min(
+            frame.height,
+            face.y2 +
+            padY
+        );
+
+
+    const c =
+        document.createElement(
+            'canvas'
+        );
+
+
+    c.width =
+        FACE_SIZE;
+
+    c.height =
+        FACE_SIZE;
+
+
+    const cx =
+        c.getContext('2d');
+
+
+    cx.drawImage(
+
+        frame,
+
+        x,
+        y,
+        x2-x,
+        y2-y,
+
+        0,
+        0,
+        FACE_SIZE,
+        FACE_SIZE
+
+    );
+
+
+    return c;
+
+}
+
+
+/* =====================================================
+   ARCFACE
+===================================================== */
+
+async function createEmbedding(
+    faceCanvas
+){
+
+    const image =
+        faceCanvas
+        .getContext('2d')
+        .getImageData(
+            0,
+            0,
+            FACE_SIZE,
+            FACE_SIZE
+        );
+
+
+    const data =
+        new Float32Array(
+            3 *
+            FACE_SIZE *
+            FACE_SIZE
+        );
+
+
+    const area =
+        FACE_SIZE *
+        FACE_SIZE;
+
+
+    for(
+        let y=0;
+        y<FACE_SIZE;
+        y++
+    ){
+
+        for(
+            let x=0;
+            x<FACE_SIZE;
+            x++
+        ){
+
+            const p =
+                (
+                    y *
+                    FACE_SIZE +
+                    x
+                ) * 4;
+
+
+            const i =
+                y *
+                FACE_SIZE +
+                x;
+
+
+            data[i] =
+                (
+                    image.data[p] -
+                    127.5
+                ) / 127.5;
+
+
+            data[area+i] =
+                (
+                    image.data[p+1] -
+                    127.5
+                ) / 127.5;
+
+
+            data[2*area+i] =
+                (
+                    image.data[p+2] -
+                    127.5
+                ) / 127.5;
+
+        }
+
+    }
+
+
+    const tensor =
+        new ort.Tensor(
+
+            'float32',
+
+            data,
+
+            [
+                1,
+                3,
+                FACE_SIZE,
+                FACE_SIZE
+            ]
+
+        );
+
+
+    const inputName =
+        arcfaceSession
+        .inputNames[0];
+
+
+    const outputs =
+        await arcfaceSession.run({
+
+            [inputName]:
+                tensor
+
+        });
+
+
+    const output =
+        outputs[
+            arcfaceSession
+            .outputNames[0]
+        ];
+
+
+    const embedding =
+        new Float32Array(
+            output.data
+        );
+
+
+    /*
+       L2 normalize
+    */
+
+    let norm = 0;
+
+
+    for(
+        let i=0;
+        i<embedding.length;
+        i++
+    ){
+
+        norm +=
+            embedding[i] *
+            embedding[i];
+
+    }
+
+
+    norm =
+        Math.sqrt(norm);
+
+
+    if(
+        norm === 0
+    ){
+
+        return null;
+
+    }
+
+
+    for(
+        let i=0;
+        i<embedding.length;
+        i++
+    ){
+
+        embedding[i] /=
+            norm;
+
+    }
+
+
+    return embedding;
+
+}
+
+
+/* =====================================================
+   FLOAT32 → BASE64
+===================================================== */
+
+function float32ToBase64(
+    array
+){
+
+    const bytes =
+        new Uint8Array(
+            array.buffer
+        );
+
+
+    let binary = '';
+
+
+    const chunk =
+        0x8000;
+
+
+    for(
+        let i=0;
+        i<bytes.length;
+        i+=chunk
+    ){
+
+        binary +=
+            String.fromCharCode
+            .apply(
+                null,
+                bytes.subarray(
+                    i,
+                    Math.min(
+                        i+chunk,
+                        bytes.length
+                    )
+                )
+            );
+
+    }
+
+
+    return btoa(
+        binary
+    );
+
+}
+
+
+/* =====================================================
+   VẼ KHUÔN MẶT
+===================================================== */
+
+function drawFace(
+    face
+){
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    if(!face){
+        return;
+    }
+
+
+    ctx.strokeStyle =
+        '#00ff66';
+
+    ctx.lineWidth =
+        4;
+
+
+    ctx.strokeRect(
+
+        face.x1,
+        face.y1,
+
+        face.x2-face.x1,
+        face.y2-face.y1
+
+    );
+
+}
+
+
+/* =====================================================
+   DETECTION LOOP
+===================================================== */
+
+let processing = false;
+
+
+async function detectLoop(){
+
+    if(!running){
+        return;
+    }
+
+
+    if(
+        processing
+    ){
+
+        requestAnimationFrame(
+            detectLoop
+        );
+
+        return;
+
+    }
+
+
+    processing = true;
+
+
+    try{
+
+        const frame =
+            document.createElement(
+                'canvas'
+            );
+
+
+        frame.width =
+            video.videoWidth;
+
+        frame.height =
+            video.videoHeight;
+
+
+        const fc =
+            frame.getContext('2d');
+
+
+        fc.drawImage(
+            video,
+            0,
+            0,
+            frame.width,
+            frame.height
+        );
+
+
+        const face =
+            await detectFace(
+                frame
+            );
+
+
+        latestFace =
+            face;
+
+
+        drawFace(
+            face
+        );
+
+
+        if(!face){
+
+            latestEmbedding =
+                null;
+
+            saveBtn.disabled =
+                true;
+
+            document.getElementById(
+                'embeddingStatus'
+            ).textContent =
+                'CHƯA CÓ';
+
+
+            setStatus(
+                'Đưa khuôn mặt vào giữa camera...',
+                'yellow'
+            );
+
+
+        }else{
+
+            const faceCanvas =
+                cropFace(
+                    frame,
+                    face
+                );
+
+
+            const embedding =
+                await createEmbedding(
+                    faceCanvas
+                );
+
+
+            if(
+                embedding &&
+                embedding.length === 512
+            ){
+
+                latestEmbedding =
+                    embedding;
+
+
+                document.getElementById(
+                    'embeddingStatus'
+                ).textContent =
+                    '512D ĐÃ TẠO';
+
+
+                saveBtn.disabled =
+                    false;
+
+
+                setStatus(
+                    'ĐÃ PHÁT HIỆN KHUÔN MẶT • FACE ID 512D ĐÃ TẠO',
+                    'green'
+                );
+
+            }
+
+        }
+
+
+    }catch(error){
+
+        console.error(error);
+
+    }
+
+
+    processing = false;
+
+
+    if(running){
+
+        setTimeout(
+            detectLoop,
+            250
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   LƯU FACE ID
+===================================================== */
+
+saveBtn.addEventListener(
+    'click',
+    function(){
+
+        const hoTen =
+            document
+            .getElementById(
+                'hoTen'
+            )
+            .value
+            .trim();
+
+
+        const ngheDanh =
+            document
+            .getElementById(
+                'ngheDanh'
+            )
+            .value
+            .trim();
+
+
+        const nhom =
+            document
+            .getElementById(
+                'nhom'
+            )
+            .value
+            .trim();
+
+
+        if(!hoTen){
+
+            alert(
+                'Vui lòng nhập Họ và tên'
+            );
+
+            return;
+
+        }
+
+
+        if(!ngheDanh){
+
+            alert(
+                'Vui lòng nhập Nghệ danh'
+            );
+
+            return;
+
+        }
+
+
+        if(!nhom){
+
+            alert(
+                'Vui lòng nhập Nhóm'
+            );
+
+            return;
+
+        }
+
+
+        if(
+            !latestEmbedding ||
+            latestEmbedding.length !== 512
+        ){
+
+            alert(
+                'Chưa tạo được Face ID 512D'
+            );
+
+            return;
+
+        }
+
+
+        const faceId =
+            float32ToBase64(
+                latestEmbedding
+            );
+
+
+        /*
+           Đổ dữ liệu vào form
+        */
+
+        document
+        .getElementById(
+            'formHoTen'
+        )
+        .value =
+            hoTen;
+
+
+        document
+        .getElementById(
+            'formNgheDanh'
+        )
+        .value =
+            ngheDanh;
+
+
+        document
+        .getElementById(
+            'formNhom'
+        )
+        .value =
+            nhom;
+
+
+        document
+        .getElementById(
+            'formFaceId'
+        )
+        .value =
+            faceId;
+
+
+        saveBtn.disabled =
+            true;
+
+
+        setStatus(
+            'ĐANG LƯU FACE ID VÀO GOOGLE SHEET...',
+            'yellow'
+        );
+
+
+        document
+        .getElementById(
+            'saveForm'
+        )
+        .action =
+            API_URL;
+
+
+        document
+        .getElementById(
+            'saveForm'
+        )
+        .submit();
+
+
+        setTimeout(
+            function(){
+
+                setStatus(
+                    'ĐÃ GỬI FACE ID. KIỂM TRA GOOGLE SHEET NHÂN_SỰ.',
+                    'green'
+                );
+
+
+                resultBox.textContent =
+                    '✅ ĐÃ GỬI DỮ LIỆU ĐĂNG KÝ';
+
+                resultBox.className =
+                    'result green';
+
+
+                saveBtn.disabled =
+                    false;
+
+            },
+            1500
+        );
+
+    }
+);
+
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+document
+.getElementById(
+    'startBtn'
+)
+.addEventListener(
+    'click',
+    startCamera
+);
+
+
+document
+.getElementById(
+    'stopBtn'
+)
+.addEventListener(
+    'click',
+    stopCamera
+);
+
+
+/* =====================================================
+   LOAD
+===================================================== */
+
+loadModels();
+
+</script>
+
+</body>
+</html>
