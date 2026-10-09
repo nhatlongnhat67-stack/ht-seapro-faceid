@@ -1,2251 +1,784 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
-
-<title>HT SEAPRO - ADMIN FACE ID</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#061522">
+<title>HT SEAPRO Face ID V2 - Đăng ký</title>
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.0/dist/ort.min.js"></script>
-
 <style>
-
-* {
-  box-sizing: border-box;
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#123b5c 0%,#061522 45%,#02080e 100%);color:#fff;font-family:Arial,sans-serif}
+.container{width:min(1000px,94%);margin:auto;padding:20px 0 28px}
+.header{text-align:center;margin-bottom:14px}
+.header h1{margin:0;font-size:clamp(20px,4vw,34px);font-weight:900;letter-spacing:1px}
+.header h1 span{color:#20a9ff}
+.header p{margin:6px 0;color:#8bb9d5;font-size:13px;letter-spacing:1px}
+.card{background:rgba(5,18,30,.97);border:1px solid #214c69;border-radius:20px;padding:16px;box-shadow:0 20px 70px rgba(0,0,0,.45)}
+.title{text-align:center;font-size:clamp(18px,3vw,25px);font-weight:800;margin-bottom:14px}
+.form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px auto;max-width:850px}
+.form label{display:block;color:#a9d8f5;font-size:13px;margin-bottom:5px}
+.form input{width:100%;padding:12px;border:1px solid #24516d;border-radius:9px;background:#071a27;color:white;font-size:15px}
+.camera-box{position:relative;width:100%;max-width:850px;margin:auto;background:#000;border-radius:16px;overflow:hidden;border:2px solid #1d577c}
+#video{display:block;width:100%;height:auto;min-height:220px;max-height:65vh;object-fit:cover;transform:scaleX(-1);background:#000}
+#canvas{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);pointer-events:none}
+.status,.challenge{max-width:850px;margin:10px auto;padding:12px;border-radius:12px;text-align:center;font-weight:bold;font-size:15px}
+.status{background:#332b08;border:1px solid #806b18;color:#ffd83d}
+.status.green{background:#062919;border-color:#16864d;color:#00ff75}
+.status.red{background:#330b0b;border-color:#8d2525;color:#ff6565}
+.challenge{background:#0a1c2b;border:1px solid #244d68;color:#ffd43b}
+.badges{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin:12px auto}
+.badge{background:#071a27;border:1px solid #24516d;color:#a9d8f5;padding:8px 11px;border-radius:30px;font-size:12px}
+.badge b{color:#00ff75}
+.buttons{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin:14px 0 4px}
+button{border:0;border-radius:11px;padding:12px 20px;font-size:15px;font-weight:800;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+.start{background:#087fda;color:white}
+.stop{background:#293b4b;color:white}
+button[hidden]{display:none!important}
+.note{max-width:850px;margin:12px auto;color:#9ed1ed;font-size:13px;line-height:1.6}
+@media(max-width:600px){
+ .container{width:100%;padding:8px 0}
+ .header{margin:0 8px 8px}
+ .header p{font-size:11px}
+ .card{padding:9px;border-radius:15px}
+ .title{font-size:18px;margin-bottom:9px}
+ .form{grid-template-columns:1fr;gap:8px}
+ .camera-box{border-radius:12px}
+ #video{min-height:220px;max-height:52vh}
+ .status,.challenge{padding:10px;margin:7px auto;font-size:13px}
+ .badges{display:none}
+ .buttons{margin:8px 0 2px}
+ button{width:100%;padding:12px;font-size:14px}
 }
-
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background:
-    radial-gradient(circle at top, #16213e 0%, #080b12 55%, #030407 100%);
-  color: white;
-  min-height: 100vh;
-}
-
-.container {
-  width: min(1100px, 95%);
-  margin: 25px auto 50px;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 25px;
-}
-
-.logo {
-  font-size: 34px;
-  font-weight: 900;
-  letter-spacing: 2px;
-}
-
-.logo span {
-  color: #ffd43b;
-}
-
-.subtitle {
-  margin-top: 8px;
-  color: #aab4c5;
-  font-size: 14px;
-}
-
-.card {
-  background: rgba(15, 20, 32, 0.94);
-  border: 1px solid rgba(255,255,255,.10);
-  border-radius: 22px;
-  padding: 24px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.45);
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-bottom: 22px;
-}
-
-.field label {
-  display: block;
-  margin-bottom: 7px;
-  color: #b9c2d0;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.field input {
-  width: 100%;
-  padding: 14px 15px;
-  border-radius: 12px;
-  border: 1px solid #30394a;
-  background: #0a0e16;
-  color: white;
-  font-size: 15px;
-  outline: none;
-}
-
-.field input:focus {
-  border-color: #3b82f6;
-}
-
-.camera-area {
-  position: relative;
-  width: 100%;
-  max-width: 760px;
-  margin: auto;
-  aspect-ratio: 16/10;
-  background: #020409;
-  border-radius: 18px;
-  overflow: hidden;
-  border: 1px solid #293246;
-}
-
-#video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scaleX(-1);
-}
-
-#overlay {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  transform: scaleX(-1);
-}
-
-.status {
-  margin-top: 18px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-
-.status-box {
-  padding: 12px;
-  background: #090d15;
-  border: 1px solid #293246;
-  border-radius: 12px;
-  text-align: center;
-}
-
-.status-title {
-  color: #8893a5;
-  font-size: 11px;
-  margin-bottom: 5px;
-}
-
-.status-value {
-  font-weight: 800;
-  font-size: 13px;
-}
-
-.ok {
-  color: #39e58c;
-}
-
-.warning {
-  color: #ffd43b;
-}
-
-.error {
-  color: #ff5b6e;
-}
-
-.result {
-  margin-top: 20px;
-  padding: 20px;
-  border-radius: 16px;
-  background: #090d15;
-  border: 1px solid #293246;
-  display: none;
-}
-
-.result.show {
-  display: block;
-}
-
-.result.success {
-  border-color: rgba(57,229,140,.55);
-}
-
-.result.duplicate {
-  border-color: rgba(255,75,92,.7);
-  background:
-    linear-gradient(
-      135deg,
-      rgba(110,15,25,.30),
-      rgba(15,10,15,.90)
-    );
-}
-
-.result-title {
-  font-size: 21px;
-  font-weight: 900;
-  margin-bottom: 12px;
-}
-
-.result-info {
-  line-height: 1.8;
-  color: #d5dbe5;
-}
-
-.similarity {
-  font-size: 30px;
-  font-weight: 900;
-  margin-top: 8px;
-}
-
-.buttons {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 22px;
-}
-
-button {
-  border: 0;
-  border-radius: 12px;
-  padding: 14px 24px;
-  font-size: 14px;
-  font-weight: 900;
-  cursor: pointer;
-  transition: .2s;
-}
-
-button:hover {
-  transform: translateY(-1px);
-}
-
-button:disabled {
-  opacity: .35;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-camera {
-  background: #2563eb;
-  color: white;
-}
-
-.btn-stop {
-  background: #303746;
-  color: white;
-}
-
-.btn-save {
-  background: #16a34a;
-  color: white;
-  min-width: 220px;
-}
-
-.btn-reset {
-  background: #4b5563;
-  color: white;
-}
-
-.face-id-box {
-  margin-top: 18px;
-  text-align: center;
-  color: #8e9aad;
-  font-size: 12px;
-}
-
-@media(max-width:800px) {
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .status {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .logo {
-    font-size: 25px;
-  }
-
-}
-
 </style>
-
 </head>
-
-
 <body>
-
 <div class="container">
+<header class="header">
+  <h1><span>HT SEAPRO</span> ENTERTAINMENT</h1>
+  <p>ĐĂNG KÝ FACE ID V2 • CĂN CHỈNH 5 ĐIỂM MỐC</p>
+</header>
 
-  <div class="header">
+<main class="card">
+  <div class="title">🧑‍💼 ĐĂNG KÝ FACE ID NHÂN SỰ</div>
 
-    <div class="logo">
-      <span>HT</span> SEAPRO
+  <div class="form">
+    <div>
+      <label for="hoTen">Họ và tên</label>
+      <input id="hoTen" autocomplete="name" placeholder="Nhập họ tên" required>
     </div>
-
-    <div class="subtitle">
-      ADMIN FACE ID — ĐĂNG KÝ NHÂN SỰ
+    <div>
+      <label for="ngheDanh">Nghệ danh / KIRA</label>
+      <input id="ngheDanh" placeholder="Nhập nghệ danh" required>
     </div>
-
+    <div>
+      <label for="nhom">Nhóm</label>
+      <input id="nhom" placeholder="Nhập nhóm" required>
+    </div>
   </div>
 
-
-  <div class="card">
-
-
-    <!-- =========================
-         THÔNG TIN NHÂN SỰ
-    ========================== -->
-
-    <div class="form-grid">
-
-      <div class="field">
-
-        <label>HỌ VÀ TÊN</label>
-
-        <input
-          id="hoTen"
-          type="text"
-          placeholder="Nhập họ và tên"
-        >
-
-      </div>
-
-
-      <div class="field">
-
-        <label>NGHỆ DANH / KIRA</label>
-
-        <input
-          id="ngheDanh"
-          type="text"
-          placeholder="Nhập KIRA"
-        >
-
-      </div>
-
-
-      <div class="field">
-
-        <label>NHÓM</label>
-
-        <input
-          id="nhom"
-          type="text"
-          placeholder="Ví dụ: quản lý"
-        >
-
-      </div>
-
-    </div>
-
-
-    <!-- =========================
-         CAMERA
-    ========================== -->
-
-    <div class="camera-area">
-
-      <video
-        id="video"
-        autoplay
-        playsinline
-        muted
-      ></video>
-
-      <canvas id="overlay"></canvas>
-
-    </div>
-
-
-    <!-- =========================
-         STATUS
-    ========================== -->
-
-    <div class="status">
-
-      <div class="status-box">
-
-        <div class="status-title">
-          SCRFD
-        </div>
-
-        <div
-          id="scrfdStatus"
-          class="status-value warning"
-        >
-          CHƯA TẢI
-        </div>
-
-      </div>
-
-
-      <div class="status-box">
-
-        <div class="status-title">
-          ARCFACE
-        </div>
-
-        <div
-          id="arcfaceStatus"
-          class="status-value warning"
-        >
-          CHƯA TẢI
-        </div>
-
-      </div>
-
-
-      <div class="status-box">
-
-        <div class="status-title">
-          EMBEDDING
-        </div>
-
-        <div
-          id="embeddingStatus"
-          class="status-value warning"
-        >
-          CHƯA CÓ
-        </div>
-
-      </div>
-
-
-      <div class="status-box">
-
-        <div class="status-title">
-          LIVENESS
-        </div>
-
-        <div
-          id="livenessStatus"
-          class="status-value warning"
-        >
-          CHƯA ĐẠT
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- =========================
-         RESULT
-    ========================== -->
-
-    <div
-      id="result"
-      class="result"
-    >
-
-      <div
-        id="resultTitle"
-        class="result-title"
-      ></div>
-
-      <div
-        id="resultInfo"
-        class="result-info"
-      ></div>
-
-      <div
-        id="similarity"
-        class="similarity"
-      ></div>
-
-    </div>
-
-
-    <div
-      id="faceIdInfo"
-      class="face-id-box"
-    >
-      Chưa quét khuôn mặt
-    </div>
-
-
-    <!-- =========================
-         BUTTONS
-    ========================== -->
-
-    <div class="buttons">
-
-      <button
-        id="startBtn"
-        class="btn-camera"
-        onclick="startCamera()"
-      >
-        BẮT ĐẦU CAMERA
-      </button>
-
-
-      <button
-        id="stopBtn"
-        class="btn-stop"
-        onclick="stopCamera()"
-        disabled
-      >
-        DỪNG CAMERA
-      </button>
-
-
-      <button
-        id="saveBtn"
-        class="btn-save"
-        onclick="saveEmployee()"
-        disabled
-      >
-        LƯU NHÂN SỰ
-      </button>
-
-
-      <button
-        id="resetBtn"
-        class="btn-reset"
-        onclick="resetForm()"
-      >
-        NHẬP LẠI
-      </button>
-
-    </div>
-
+  <div class="camera-box">
+    <video id="video" autoplay muted playsinline></video>
+    <canvas id="canvas"></canvas>
   </div>
 
+  <div id="status" class="status">Đang tải mô hình AI…</div>
+  <div id="challenge" class="challenge">Nhập thông tin nhân sự rồi bật camera.</div>
+
+  <div class="badges">
+    <div class="badge">SCRFD: <b id="scrfdStatus">ĐANG TẢI</b></div>
+    <div class="badge">ARCFACE: <b id="arcStatus">ĐANG TẢI</b></div>
+    <div class="badge">MẪU: <b id="embeddingStatus">0/5</b></div>
+  </div>
+
+  <div class="buttons">
+    <button id="startBtn" class="start">📷 BẬT CAMERA</button>
+    <button id="stopBtn" class="stop" hidden>⏹ DỪNG CAMERA</button>
+    <button id="registerBtn" class="start" disabled>💾 ĐĂNG KÝ FACE ID</button>
+  </div>
+
+  <div class="note">
+    Đăng ký dành cho người có quyền quản lý. Chỉ đăng ký một người trong khung hình.
+    Đứng đủ sáng, nhìn camera, không đeo kính râm hoặc khẩu trang.
+    Sau khi chuyển sang V2, cần đăng ký lại Face ID để dữ liệu được tạo bằng cùng quy trình căn chỉnh.
+  </div>
+</main>
 </div>
 
-
 <script>
+'use strict';
 
+const API_URL='https://script.google.com/macros/s/AKfycbzRwSD1xs75XXNwE_R51TIu_QKrKuon-aEcezM5cbqzevBSuQuhuqkYfN8Ozq_B1CR1/exec';
+const SCRFD_MODEL='./model/scrfd_500m_bnkps.onnx';
+const ARCFACE_MODEL='./model/w600k_mbf.onnx';
 
-/* =====================================================
-   CONFIG
-===================================================== */
+const INPUT_SIZE=640;
+const FACE_SIZE=112;
+const DET_THRESHOLD=0.55;
+const STRIDES=[8,16,32];
+const MIN_FACE_WIDTH=100;
+const SAMPLE_COUNT=5;
+const SAMPLE_INTERVAL_MS=400;
+const QUALITY_MIN_BRIGHTNESS=35;
+const QUALITY_MAX_BRIGHTNESS=225;
+const QUALITY_MIN_SHARPNESS=12;
 
-const API_URL =
-  'https://script.google.com/macros/s/AKfycbzRwSD1xs75XXNwE_R51TIu_QKrKuon-aEcezM5cbqzevBSuQuhuqkYfN8Ozq_B1CR1/exec';
+const LANDMARK_TEMPLATE=[
+ [38.2946,51.6963],
+ [73.5318,51.5014],
+ [56.0252,71.7366],
+ [41.5493,92.3655],
+ [70.7299,92.2041]
+];
 
+const video=document.getElementById('video');
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+const statusBox=document.getElementById('status');
+const challenge=document.getElementById('challenge');
+const startBtn=document.getElementById('startBtn');
+const stopBtn=document.getElementById('stopBtn');
+const registerBtn=document.getElementById('registerBtn');
+const scrfdStatus=document.getElementById('scrfdStatus');
+const arcStatus=document.getElementById('arcStatus');
+const embeddingStatus=document.getElementById('embeddingStatus');
 
-const SCRFD_MODEL =
-  './model/scrfd_500m_bnkps.onnx';
+let scrfdSession=null;
+let arcfaceSession=null;
+let stream=null;
+let running=false;
+let processing=false;
+let registerSamples=[];
+let lastSampleAt=0;
+let enrollmentToken=0;
 
-
-const ARCFACE_MODEL =
-  './model/w600k_mbf.onnx';
-
-
-const FACE_THRESHOLD =
-  0.70;
-
-
-/* =====================================================
-   GLOBAL
-===================================================== */
-
-let video =
-  document.getElementById('video');
-
-let overlay =
-  document.getElementById('overlay');
-
-let ctx =
-  overlay.getContext('2d');
-
-
-let stream =
-  null;
-
-let animationFrame =
-  null;
-
-let scrfdSession =
-  null;
-
-let arcfaceSession =
-  null;
-
-let currentEmbedding =
-  null;
-
-let faceDetected =
-  false;
-
-let livenessPassed =
-  false;
-
-let checking =
-  false;
-
-let faceReady =
-  false;
-
-
-/* =====================================================
-   UI
-===================================================== */
-
-function setStatus(
-  id,
-  text,
-  type
-) {
-
-  const el =
-    document.getElementById(id);
-
-  el.textContent =
-    text;
-
-  el.className =
-    'status-value ' +
-    (
-      type || ''
-    );
-
+function setStatus(message,type='yellow'){
+ statusBox.className='status '+type;
+ statusBox.textContent=message;
 }
 
-
-function showResult(
-  title,
-  info,
-  similarity,
-  type
-) {
-
-  const box =
-    document.getElementById('result');
-
-  const titleEl =
-    document.getElementById('resultTitle');
-
-  const infoEl =
-    document.getElementById('resultInfo');
-
-  const similarityEl =
-    document.getElementById('similarity');
-
-
-  box.className =
-    'result show ' +
-    (
-      type || ''
-    );
-
-
-  titleEl.textContent =
-    title;
-
-
-  infoEl.innerHTML =
-    info || '';
-
-
-  similarityEl.textContent =
-    similarity || '';
-
+function resetSamples(){
+ registerSamples=[];
+ lastSampleAt=0;
+ embeddingStatus.textContent='0/'+SAMPLE_COUNT;
+ registerBtn.disabled=true;
 }
 
-
-function hideResult() {
-
-  document
-    .getElementById('result')
-    .className =
-    'result';
-
+function findOutput(outputs,names){
+ const keys=Object.keys(outputs);
+ const candidates=Array.isArray(names)?names:[names];
+ for(const name of candidates){
+  const key=keys.find(k=>k.toLowerCase()===String(name).toLowerCase());
+  if(key)return outputs[key];
+ }
+ for(const name of candidates){
+  const key=keys.find(k=>k.toLowerCase().includes(String(name).toLowerCase()));
+  if(key)return outputs[key];
+ }
+ return null;
 }
 
+async function loadModels(){
+ try{
+  setStatus('Đang tải mô hình SCRFD…');
+  scrfdSession=await ort.InferenceSession.create(
+   SCRFD_MODEL,{executionProviders:['wasm']}
+  );
+  scrfdStatus.textContent='HOẠT ĐỘNG';
 
-/* =====================================================
-   CAMERA
-===================================================== */
+  setStatus('Đang tải mô hình ArcFace…');
+  arcfaceSession=await ort.InferenceSession.create(
+   ARCFACE_MODEL,{executionProviders:['wasm']}
+  );
+  arcStatus.textContent='HOẠT ĐỘNG';
 
-async function startCamera() {
+  setStatus('AI đã sẵn sàng','green');
+  challenge.textContent='Nhập thông tin nhân sự rồi bấm BẬT CAMERA.';
+ }catch(error){
+  console.error(error);
+  setStatus('Không tải được AI: '+error.message,'red');
+  challenge.textContent='Kiểm tra thư mục model và kết nối mạng.';
+ }
+}
 
-  try {
+async function startCamera(){
+ if(running)return;
+ if(!scrfdSession||!arcfaceSession){
+  setStatus('AI chưa tải xong.','yellow');
+  return;
+ }
+ if(!navigator.mediaDevices?.getUserMedia){
+  setStatus('Trình duyệt không hỗ trợ camera hoặc trang chưa chạy HTTPS.','red');
+  return;
+ }
 
-    if (stream) {
+ try{
+  stream=await navigator.mediaDevices.getUserMedia({
+   audio:false,
+   video:{
+    facingMode:{ideal:'user'},
+    width:{ideal:1280},
+    height:{ideal:720}
+   }
+  });
 
-      return;
+  video.srcObject=stream;
+  await video.play();
 
+  running=true;
+  processing=false;
+  enrollmentToken++;
+  startBtn.hidden=true;
+  stopBtn.hidden=false;
+  resetSamples();
+
+  setStatus('Camera đang hoạt động','green');
+  challenge.textContent='Đưa một khuôn mặt vào giữa camera.';
+  enrollmentLoop(enrollmentToken);
+ }catch(error){
+  console.error(error);
+  running=false;
+  startBtn.hidden=false;
+  stopBtn.hidden=true;
+  setStatus('Không mở được camera: '+error.message,'red');
+  challenge.textContent='Cho phép truy cập camera rồi thử lại.';
+ }
+}
+
+function stopCamera(){
+ running=false;
+ enrollmentToken++;
+ processing=false;
+
+ if(stream){
+  stream.getTracks().forEach(track=>track.stop());
+  stream=null;
+ }
+
+ video.srcObject=null;
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ startBtn.hidden=false;
+ stopBtn.hidden=true;
+ resetSamples();
+ challenge.textContent='Camera đã dừng.';
+}
+
+function getFrame(){
+ const c=document.createElement('canvas');
+ c.width=video.videoWidth;
+ c.height=video.videoHeight;
+ c.getContext('2d').drawImage(video,0,0,c.width,c.height);
+ return c;
+}
+
+function letterbox(source,size){
+ const scale=Math.min(size/source.width,size/source.height);
+ const width=Math.round(source.width*scale);
+ const height=Math.round(source.height*scale);
+ const c=document.createElement('canvas');
+ c.width=size;
+ c.height=size;
+ const g=c.getContext('2d');
+ g.fillStyle='rgb(127,127,127)';
+ g.fillRect(0,0,size,size);
+ const ox=(size-width)/2;
+ const oy=(size-height)/2;
+ g.drawImage(source,ox,oy,width,height);
+ return {canvas:c,scale,ox,oy};
+}
+
+function imageTensor(c){
+ const image=c.getContext('2d').getImageData(0,0,c.width,c.height);
+ const area=c.width*c.height;
+ const data=new Float32Array(area*3);
+
+ for(let i=0;i<area;i++){
+  const p=i*4;
+  data[i]=(image.data[p]-127.5)/128;
+  data[area+i]=(image.data[p+1]-127.5)/128;
+  data[area*2+i]=(image.data[p+2]-127.5)/128;
+ }
+
+ return new ort.Tensor('float32',data,[1,3,c.height,c.width]);
+}
+
+function intersectionOverUnion(a,b){
+ const x1=Math.max(a.x1,b.x1);
+ const y1=Math.max(a.y1,b.y1);
+ const x2=Math.min(a.x2,b.x2);
+ const y2=Math.min(a.y2,b.y2);
+ const inter=Math.max(0,x2-x1)*Math.max(0,y2-y1);
+ const areaA=Math.max(0,a.x2-a.x1)*Math.max(0,a.y2-a.y1);
+ const areaB=Math.max(0,b.x2-b.x1)*Math.max(0,b.y2-b.y1);
+ return inter/(areaA+areaB-inter+1e-6);
+}
+
+function nonMaximumSuppression(items,threshold=0.4){
+ items.sort((a,b)=>b.score-a.score);
+ const result=[];
+ for(const item of items){
+  if(result.every(existing=>intersectionOverUnion(existing,item)<threshold)){
+   result.push(item);
+  }
+  if(result.length>=20)break;
+ }
+ return result;
+}
+
+/*
+ * Lưu ý:
+ * Tên tensor đầu ra SCRFD có thể khác nhau tùy bản ONNX.
+ * Nếu không tìm được score/bbox/kps, cần điều chỉnh tên theo
+ * scrfdSession.outputNames của đúng mô hình đang dùng.
+ */
+function decodeSCRFD(outputs){
+ const detections=[];
+
+ for(const stride of STRIDES){
+  const scoreTensor=findOutput(outputs,['score_'+stride,'scores_'+stride]);
+  const boxTensor=findOutput(outputs,['bbox_'+stride,'boxes_'+stride]);
+  const landmarkTensor=findOutput(outputs,['kps_'+stride,'landmark_'+stride,'keypoint_'+stride]);
+
+  if(!scoreTensor||!boxTensor||!landmarkTensor)continue;
+
+  const scores=scoreTensor.data;
+  const boxes=boxTensor.data;
+  const landmarks=landmarkTensor.data;
+  const grid=Math.ceil(INPUT_SIZE/stride);
+  const anchors=Math.max(1,Math.round(scores.length/(grid*grid)));
+  const count=Math.min(
+   scores.length,
+   Math.floor(boxes.length/4),
+   Math.floor(landmarks.length/10)
+  );
+
+  for(let i=0;i<count;i++){
+   const score=Number(scores[i]);
+   if(!Number.isFinite(score)||score<DET_THRESHOLD)continue;
+
+   const cell=Math.floor(i/anchors);
+   const gx=cell%grid;
+   const gy=Math.floor(cell/grid);
+   const b=i*4;
+   const k=i*10;
+   const cx=gx*stride;
+   const cy=gy*stride;
+
+   const face={
+    score,
+    x1:cx-boxes[b]*stride,
+    y1:cy-boxes[b+1]*stride,
+    x2:cx+boxes[b+2]*stride,
+    y2:cy+boxes[b+3]*stride,
+    landmarks:[]
+   };
+
+   for(let j=0;j<5;j++){
+    face.landmarks.push([
+     cx+landmarks[k+j*2]*stride,
+     cy+landmarks[k+j*2+1]*stride
+    ]);
+   }
+
+   if(face.x2-face.x1>2&&face.y2-face.y1>2){
+    detections.push(face);
+   }
+  }
+ }
+
+ if(!detections.length)return null;
+ return nonMaximumSuppression(detections)[0]||null;
+}
+
+async function detectFace(frame){
+ const lb=letterbox(frame,INPUT_SIZE);
+ const tensor=imageTensor(lb.canvas);
+ const outputs=await scrfdSession.run({
+  [scrfdSession.inputNames[0]]:tensor
+ });
+
+ const face=decodeSCRFD(outputs);
+ if(!face)return null;
+
+ const unmap=p=>[
+  (p[0]-lb.ox)/lb.scale,
+  (p[1]-lb.oy)/lb.scale
+ ];
+
+ const p1=unmap([face.x1,face.y1]);
+ const p2=unmap([face.x2,face.y2]);
+
+ face.x1=Math.max(0,p1[0]);
+ face.y1=Math.max(0,p1[1]);
+ face.x2=Math.min(frame.width,p2[0]);
+ face.y2=Math.min(frame.height,p2[1]);
+ face.landmarks=face.landmarks.map(unmap);
+
+ if(face.landmarks.some(p=>!Number.isFinite(p[0])||!Number.isFinite(p[1]))){
+  return null;
+ }
+ return face;
+}
+
+function drawFace(face){
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ if(!face)return;
+
+ ctx.strokeStyle='#00ff75';
+ ctx.lineWidth=Math.max(2,canvas.width/400);
+ ctx.strokeRect(face.x1,face.y1,face.x2-face.x1,face.y2-face.y1);
+
+ for(const p of face.landmarks){
+  ctx.fillStyle='#00e5ff';
+  ctx.beginPath();
+  ctx.arc(p[0],p[1],Math.max(2,canvas.width/300),0,Math.PI*2);
+  ctx.fill();
+ }
+}
+
+function alignFace(frame,face){
+ if(!face.landmarks||face.landmarks.length!==5){
+  throw new Error('Mô hình không trả đủ 5 điểm mốc.');
+ }
+
+ const src=face.landmarks;
+ const dst=LANDMARK_TEMPLATE;
+ let mx=0,my=0,ux=0,uy=0;
+
+ for(let i=0;i<5;i++){
+  mx+=src[i][0];my+=src[i][1];
+  ux+=dst[i][0];uy+=dst[i][1];
+ }
+ mx/=5;my/=5;ux/=5;uy/=5;
+
+ let den=0,aa=0,bb=0;
+ for(let i=0;i<5;i++){
+  const x=src[i][0]-mx;
+  const y=src[i][1]-my;
+  const u=dst[i][0]-ux;
+  const v=dst[i][1]-uy;
+  den+=x*x+y*y;
+  aa+=x*u+y*v;
+  bb+=x*v-y*u;
+ }
+
+ if(den<1e-6)throw new Error('Điểm mốc khuôn mặt không hợp lệ.');
+
+ const a=aa/den;
+ const b=bb/den;
+ const tx=ux-a*mx+b*my;
+ const ty=uy-b*mx-a*my;
+
+ const c=document.createElement('canvas');
+ c.width=FACE_SIZE;
+ c.height=FACE_SIZE;
+ const g=c.getContext('2d',{willReadFrequently:true});
+ g.fillStyle='#808080';
+ g.fillRect(0,0,FACE_SIZE,FACE_SIZE);
+ g.setTransform(a,b,-b,a,tx,ty);
+ g.drawImage(frame,0,0);
+ g.setTransform(1,0,0,1,0,0);
+ return c;
+}
+
+function assessQuality(c,face){
+ const width=face.x2-face.x1;
+ const height=face.y2-face.y1;
+
+ if(width<MIN_FACE_WIDTH||height<MIN_FACE_WIDTH*0.85){
+  return {ok:false,reason:'Mặt hơi xa camera. Hãy tiến gần hơn.'};
+ }
+
+ const lm=face.landmarks;
+ const eyeDistance=Math.hypot(
+  lm[0][0]-lm[1][0],
+  lm[0][1]-lm[1][1]
+ );
+
+ if(eyeDistance<width*0.18||eyeDistance>width*0.65){
+  return {ok:false,reason:'Góc mặt chưa phù hợp. Hãy nhìn thẳng camera.'};
+ }
+
+ const image=c.getContext('2d',{willReadFrequently:true})
+  .getImageData(0,0,c.width,c.height).data;
+
+ let sum=0;
+ const gray=[];
+
+ for(let i=0;i<image.length;i+=4){
+  const value=0.299*image[i]+0.587*image[i+1]+0.114*image[i+2];
+  sum+=value;
+  gray.push(value);
+ }
+
+ const brightness=sum/(image.length/4);
+
+ if(brightness<QUALITY_MIN_BRIGHTNESS||brightness>QUALITY_MAX_BRIGHTNESS){
+  return {ok:false,reason:'Ánh sáng chưa tốt. Hãy đứng nơi sáng đều.'};
+ }
+
+ let lapSum=0,lapSq=0,n=0;
+
+ for(let y=1;y<FACE_SIZE-1;y++){
+  for(let x=1;x<FACE_SIZE-1;x++){
+   const i=y*FACE_SIZE+x;
+   const value=4*gray[i]-gray[i-1]-gray[i+1]-gray[i-FACE_SIZE]-gray[i+FACE_SIZE];
+   lapSum+=value;
+   lapSq+=value*value;
+   n++;
+  }
+ }
+
+ const mean=lapSum/n;
+ const sharpness=lapSq/n-mean*mean;
+
+ if(sharpness<QUALITY_MIN_SHARPNESS){
+  return {ok:false,reason:'Ảnh bị mờ. Giữ camera chắc và lau ống kính.'};
+ }
+
+ return {ok:true,brightness,sharpness};
+}
+
+async function createEmbedding(c){
+ const image=c.getContext('2d',{willReadFrequently:true})
+  .getImageData(0,0,FACE_SIZE,FACE_SIZE);
+ const area=FACE_SIZE*FACE_SIZE;
+ const data=new Float32Array(area*3);
+
+ for(let i=0;i<area;i++){
+  const p=i*4;
+  data[i]=(image.data[p]-127.5)/127.5;
+  data[area+i]=(image.data[p+1]-127.5)/127.5;
+  data[area*2+i]=(image.data[p+2]-127.5)/127.5;
+ }
+
+ const tensor=new ort.Tensor('float32',data,[1,3,FACE_SIZE,FACE_SIZE]);
+ const outputs=await arcfaceSession.run({
+  [arcfaceSession.inputNames[0]]:tensor
+ });
+ const output=outputs[arcfaceSession.outputNames[0]];
+ return normalize(Array.from(output.data));
+}
+
+function normalize(values){
+ const norm=Math.sqrt(values.reduce((sum,v)=>sum+v*v,0));
+ return norm?values.map(v=>v/norm):null;
+}
+
+function averageEmbeddings(items){
+ if(!items.length)return null;
+ const avg=new Array(items[0].length).fill(0);
+
+ for(const embedding of items){
+  for(let i=0;i<avg.length;i++){
+   avg[i]+=embedding[i]/items.length;
+  }
+ }
+ return normalize(avg);
+}
+
+function embeddingToBase64(embedding){
+ const floats=new Float32Array(embedding);
+ const bytes=new Uint8Array(floats.buffer);
+ let binary='';
+
+ for(let i=0;i<bytes.length;i+=0x8000){
+  binary+=String.fromCharCode(
+   ...bytes.subarray(i,Math.min(i+0x8000,bytes.length))
+  );
+ }
+ return btoa(binary);
+}
+
+/*
+ * Gọi API JSONP.
+ * Máy chủ Apps Script phải hỗ trợ callback JSONP cho action
+ * checkDuplicate và saveFace thì hai bước này mới hoạt động.
+ */
+function requestJSONP(params,onResult,onError){
+ const callback='htAdminCallback_'+Date.now()+'_'+Math.floor(Math.random()*100000);
+ let done=false;
+ const script=document.createElement('script');
+
+ function cleanup(){
+  try{delete window[callback];}catch(e){}
+  script.remove();
+ }
+
+ window[callback]=data=>{
+  if(done)return;
+  done=true;
+  cleanup();
+  onResult(data);
+ };
+
+ script.onerror=()=>{
+  if(done)return;
+  done=true;
+  cleanup();
+  onError(new Error('Không kết nối được Apps Script.'));
+ };
+
+ params.callback=callback;
+ script.src=API_URL+'?'+new URLSearchParams(params).toString();
+ document.body.appendChild(script);
+
+ setTimeout(()=>{
+  if(done)return;
+  done=true;
+  cleanup();
+  onError(new Error('Máy chủ không phản hồi.'));
+ },15000);
+}
+
+let registerSamples=[];
+let registerLastSample=0;
+
+async function enrollmentLoop(token){
+ if(!running||token!==enrollmentToken)return;
+
+ if(processing){
+  setTimeout(()=>enrollmentLoop(token),80);
+  return;
+ }
+
+ processing=true;
+
+ try{
+  const frame=getFrame();
+
+  if(!frame.width||!frame.height){
+   processing=false;
+   setTimeout(()=>enrollmentLoop(token),150);
+   return;
+  }
+
+  canvas.width=frame.width;
+  canvas.height=frame.height;
+
+  const face=await detectFace(frame);
+  drawFace(face);
+
+  if(!face){
+   registerSamples=[];
+   embeddingStatus.textContent='0/'+SAMPLE_COUNT;
+   registerBtn.disabled=true;
+   challenge.textContent='Đưa một khuôn mặt vào giữa camera.';
+  }else if(Date.now()-registerLastSample>=SAMPLE_INTERVAL_MS){
+   const aligned=alignFace(frame,face);
+   const quality=assessQuality(aligned,face);
+
+   if(!quality.ok){
+    challenge.textContent=quality.reason;
+   }else{
+    const embedding=await createEmbedding(aligned);
+
+    if(embedding&&embedding.length===512){
+     registerSamples.push(embedding);
+
+     if(registerSamples.length>SAMPLE_COUNT){
+      registerSamples.shift();
+     }
+
+     registerLastSample=Date.now();
+     embeddingStatus.textContent=registerSamples.length+'/'+SAMPLE_COUNT;
+     registerBtn.disabled=registerSamples.length<SAMPLE_COUNT;
+
+     setStatus('Đã thu mẫu Face ID '+registerSamples.length+'/'+SAMPLE_COUNT,'green');
+     challenge.textContent=registerSamples.length<SAMPLE_COUNT
+      ?'Giữ mặt rõ trong camera để thu thêm mẫu.'
+      :'Đã đủ 5 mẫu chất lượng tốt. Kiểm tra thông tin rồi bấm ĐĂNG KÝ.';
     }
-
-
-    stream =
-      await navigator.mediaDevices.getUserMedia({
-
-        video: {
-
-          facingMode: 'user',
-
-          width: {
-            ideal: 1280
-          },
-
-          height: {
-            ideal: 720
-          }
-
-        },
-
-        audio: false
-
-      });
-
-
-    video.srcObject =
-      stream;
-
-
-    await video.play();
-
-
-    overlay.width =
-      video.videoWidth;
-
-    overlay.height =
-      video.videoHeight;
-
-
-    document
-      .getElementById('startBtn')
-      .disabled =
-      true;
-
-
-    document
-      .getElementById('stopBtn')
-      .disabled =
-      false;
-
-
-    loadModels();
-
-
-  } catch (error) {
-
-    alert(
-      'Không thể mở camera.\n\n' +
-      error.message
-    );
-
+   }
   }
+ }catch(error){
+  console.error(error);
+  setStatus('Lỗi xử lý khuôn mặt: '+error.message,'red');
+ }
 
+ processing=false;
+
+ if(running&&token===enrollmentToken){
+  setTimeout(()=>enrollmentLoop(token),120);
+ }
 }
 
+async function saveRegistration(){
+ const hoTen=document.getElementById('hoTen').value.trim();
+ const ngheDanh=document.getElementById('ngheDanh').value.trim();
+ const nhom=document.getElementById('nhom').value.trim();
 
-/* =====================================================
-   STOP CAMERA
-===================================================== */
+ if(!hoTen||!ngheDanh||!nhom){
+  setStatus('Vui lòng nhập đủ họ tên, nghệ danh và nhóm.','red');
+  return;
+ }
 
-function stopCamera() {
+ if(registerSamples.length<SAMPLE_COUNT){
+  setStatus('Cần thu đủ 5 mẫu Face ID chất lượng tốt.','yellow');
+  return;
+ }
 
-  if (animationFrame) {
+ const averaged=averageEmbeddings(registerSamples);
 
-    cancelAnimationFrame(
-      animationFrame
-    );
+ if(!averaged||averaged.length!==512){
+  setStatus('Không tạo được Face ID hợp lệ. Vui lòng thu mẫu lại.','red');
+  return;
+ }
 
-    animationFrame =
-      null;
+ const faceId=embeddingToBase64(averaged);
 
+ registerBtn.disabled=true;
+ setStatus('Đang kiểm tra Face ID trùng…');
+
+ requestJSONP({
+  action:'checkDuplicate',
+  embedding:faceId
+ },duplicateResult=>{
+  if(duplicateResult&&duplicateResult.duplicate){
+   const existing=duplicateResult.existingEmployee||{};
+   setStatus('Face ID đã tồn tại'+(existing.hoTen?': '+existing.hoTen:''),'red');
+   challenge.textContent='Không lưu để tránh đăng ký trùng. Hãy kiểm tra nhân sự hiện có.';
+   registerBtn.disabled=false;
+   return;
   }
 
+  setStatus('Đang gửi Face ID lên máy chủ…');
 
-  if (stream) {
+  requestJSONP({
+   action:'saveFace',
+   hoTen:hoTen,
+   ngheDanh:ngheDanh,
+   nhom:nhom,
+   faceId:faceId
+  },saved=>{
+   if(saved&&saved.success){
+    setStatus('ĐĂNG KÝ FACE ID THÀNH CÔNG','green');
+    challenge.textContent='Đã gửi đăng ký. Hãy kiểm tra sheet NHÂN_SỰ.';
+    registerSamples=[];
+    embeddingStatus.textContent='0/'+SAMPLE_COUNT;
+   }else{
+    setStatus((saved&&saved.message)||'Không lưu được Face ID.','red');
+    challenge.textContent='Kiểm tra phản hồi Apps Script và thử lại.';
+   }
+   registerBtn.disabled=registerSamples.length<SAMPLE_COUNT;
+  },error=>{
+   setStatus(error.message,'red');
+   registerBtn.disabled=false;
+  });
 
-    stream
-      .getTracks()
-      .forEach(
-        track =>
-          track.stop()
-      );
-
-    stream =
-      null;
-
-  }
-
-
-  video.srcObject =
-    null;
-
-
-  document
-    .getElementById('startBtn')
-    .disabled =
-    false;
-
-
-  document
-    .getElementById('stopBtn')
-    .disabled =
-    true;
-
+ },error=>{
+  setStatus(error.message,'red');
+  registerBtn.disabled=false;
+ });
 }
 
-
-/* =====================================================
-   LOAD MODELS
-===================================================== */
-
-async function loadModels() {
-
-  try {
-
-    setStatus(
-      'scrfdStatus',
-      'ĐANG TẢI',
-      'warning'
-    );
-
-
-    setStatus(
-      'arcfaceStatus',
-      'ĐANG TẢI',
-      'warning'
-    );
-
-
-    /*
-     * SCRFD
-     */
-
-    scrfdSession =
-      await ort.InferenceSession.create(
-        SCRFD_MODEL,
-        {
-          executionProviders: [
-            'wasm'
-          ]
-        }
-      );
-
-
-    setStatus(
-      'scrfdStatus',
-      'HOẠT ĐỘNG',
-      'ok'
-    );
-
-
-    /*
-     * ArcFace
-     */
-
-    arcfaceSession =
-      await ort.InferenceSession.create(
-        ARCFACE_MODEL,
-        {
-          executionProviders: [
-            'wasm'
-          ]
-        }
-      );
-
-
-    setStatus(
-      'arcfaceStatus',
-      'HOẠT ĐỘNG',
-      'ok'
-    );
-
-
-    faceReady =
-      true;
-
-
-    detectLoop();
-
-
-  } catch (error) {
-
-    console.error(error);
-
-
-    setStatus(
-      'scrfdStatus',
-      'LỖI',
-      'error'
-    );
-
-
-    setStatus(
-      'arcfaceStatus',
-      'LỖI',
-      'error'
-    );
-
-
-    showResult(
-      '❌ KHÔNG TẢI ĐƯỢC MODEL',
-      error.message,
-      '',
-      'duplicate'
-    );
-
-  }
-
-}
-
-
-/* =====================================================
-   DETECTION LOOP
-===================================================== */
-
-async function detectLoop() {
-
-  if (!stream) {
-
-    return;
-
-  }
-
-
-  if (!faceReady) {
-
-    animationFrame =
-      requestAnimationFrame(
-        detectLoop
-      );
-
-    return;
-
-  }
-
-
-  try {
-
-    /*
-     * Phần phát hiện khuôn mặt
-     * và tạo embedding được giữ
-     * theo pipeline SCRFD + ArcFace.
-     */
-
-    await processFace();
-
-
-  } catch (error) {
-
-    console.error(
-      'Face processing:',
-      error
-    );
-
-  }
-
-
-  animationFrame =
-    requestAnimationFrame(
-      detectLoop
-    );
-
-}
-
-
-/* =====================================================
-   PROCESS FACE
-===================================================== */
-
-async function processFace() {
-
-  /*
-   * Lấy hình ảnh hiện tại
-   */
-
-  if (
-    video.readyState <
-    2
-  ) {
-
-    return;
-
-  }
-
-
-  const width =
-    video.videoWidth;
-
-  const height =
-    video.videoHeight;
-
-
-  if (!width || !height) {
-
-    return;
-
-  }
-
-
-  overlay.width =
-    width;
-
-  overlay.height =
-    height;
-
-
-  /*
-   * Vẽ camera
-   */
-
-  ctx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  /*
-   * =================================================
-   * LIVENESS
-   * =================================================
-   *
-   * Sử dụng chuyển động khuôn mặt
-   * để xác nhận người thật.
-   *
-   * Ở phiên bản thực tế, embedding
-   * được tạo khi khuôn mặt ổn định.
-   */
-
-
-  faceDetected =
-    true;
-
-  livenessPassed =
-    true;
-
-
-  setStatus(
-    'livenessStatus',
-    'ĐẠT',
-    'ok'
-  );
-
-
-  /*
-   * Hiện khung khuôn mặt
-   */
-
-  drawFaceBox(
-    width,
-    height
-  );
-
-
-  /*
-   * Tạo embedding
-   */
-
-  if (
-    !currentEmbedding &&
-    !checking
-  ) {
-
-    /*
-     * Lấy ảnh camera
-     */
-
-    const imageData =
-      captureFaceImage(
-        width,
-        height
-      );
-
-
-    if (imageData) {
-
-      try {
-
-        currentEmbedding =
-          await createEmbedding(
-            imageData
-          );
-
-
-        if (
-          currentEmbedding &&
-          currentEmbedding.length === 512
-        ) {
-
-          setStatus(
-            'embeddingStatus',
-            '512D',
-            'ok'
-          );
-
-
-          document
-            .getElementById(
-              'faceIdInfo'
-            )
-            .textContent =
-            'Face ID 512D đã tạo — đang kiểm tra trùng...';
-
-
-          /*
-           * KIỂM TRA TRÙNG
-           */
-
-          await checkDuplicateFace();
-
-        }
-
-      } catch (error) {
-
-        console.error(
-          error
-        );
-
-      }
-
-    }
-
-  }
-
-}
-
-
-/* =====================================================
-   DRAW FACE BOX
-===================================================== */
-
-function drawFaceBox(
-  width,
-  height
-) {
-
-  const boxWidth =
-    width * 0.42;
-
-  const boxHeight =
-    height * 0.62;
-
-  const x =
-    (
-      width -
-      boxWidth
-    ) / 2;
-
-  const y =
-    (
-      height -
-      boxHeight
-    ) / 2;
-
-
-  ctx.strokeStyle =
-    '#39e58c';
-
-  ctx.lineWidth =
-    5;
-
-  ctx.strokeRect(
-    x,
-    y,
-    boxWidth,
-    boxHeight
-  );
-
-}
-
-
-/* =====================================================
-   CAPTURE FACE IMAGE
-===================================================== */
-
-function captureFaceImage(
-  width,
-  height
-) {
-
-  const canvas =
-    document.createElement(
-      'canvas'
-    );
-
-
-  /*
-   * Kích thước chuẩn ArcFace
-   */
-
-  canvas.width =
-    112;
-
-  canvas.height =
-    112;
-
-
-  const c =
-    canvas.getContext(
-      '2d'
-    );
-
-
-  /*
-   * Lấy vùng trung tâm khuôn mặt.
-   *
-   * Trong hệ thống thực tế có thể
-   * thay bằng bounding box SCRFD.
-   */
-
-  const size =
-    Math.min(
-      width,
-      height
-    ) * 0.55;
-
-
-  const sx =
-    (
-      width -
-      size
-    ) / 2;
-
-
-  const sy =
-    (
-      height -
-      size
-    ) / 2;
-
-
-  c.drawImage(
-    video,
-    sx,
-    sy,
-    size,
-    size,
-    0,
-    0,
-    112,
-    112
-  );
-
-
-  return c.getImageData(
-    0,
-    0,
-    112,
-    112
-  );
-
-}
-
-
-/* =====================================================
-   CREATE EMBEDDING
-===================================================== */
-
-async function createEmbedding(
-  imageData
-) {
-
-  /*
-   * Chuẩn hóa ảnh 112x112.
-   */
-
-  const data =
-    imageData.data;
-
-
-  const input =
-    new Float32Array(
-      3 * 112 * 112
-    );
-
-
-  /*
-   * RGB → CHW
-   * Normalize [-1, 1]
-   */
-
-  for (
-    let y = 0;
-    y < 112;
-    y++
-  ) {
-
-    for (
-      let x = 0;
-      x < 112;
-      x++
-    ) {
-
-      const pixel =
-        (
-          y * 112 +
-          x
-        ) * 4;
-
-
-      const r =
-        data[pixel];
-
-
-      const g =
-        data[pixel + 1];
-
-
-      const b =
-        data[pixel + 2];
-
-
-      const index =
-        y * 112 + x;
-
-
-      input[index] =
-        (
-          r - 127.5
-        ) / 128;
-
-
-      input[
-        112 * 112 +
-        index
-      ] =
-        (
-          g - 127.5
-        ) / 128;
-
-
-      input[
-        2 * 112 * 112 +
-        index
-      ] =
-        (
-          b - 127.5
-        ) / 128;
-
-    }
-
-  }
-
-
-  /*
-   * Input model
-   */
-
-  const inputName =
-    arcfaceSession
-      .inputNames[0];
-
-
-  const tensor =
-    new ort.Tensor(
-      'float32',
-      input,
-      [
-        1,
-        3,
-        112,
-        112
-      ]
-    );
-
-
-  const result =
-    await arcfaceSession.run({
-
-      [inputName]:
-        tensor
-
-    });
-
-
-  const outputName =
-    arcfaceSession
-      .outputNames[0];
-
-
-  const embedding =
-    Array.from(
-      result[
-        outputName
-      ].data
-    );
-
-
-  /*
-   * L2 NORMALIZATION
-   */
-
-  let norm =
-    0;
-
-
-  for (
-    let i = 0;
-    i < embedding.length;
-    i++
-  ) {
-
-    norm +=
-      embedding[i] *
-      embedding[i];
-
-  }
-
-
-  norm =
-    Math.sqrt(norm);
-
-
-  if (norm > 0) {
-
-    for (
-      let i = 0;
-      i < embedding.length;
-      i++
-    ) {
-
-      embedding[i] /=
-        norm;
-
-    }
-
-  }
-
-
-  return embedding;
-
-}
-
-
-/* =====================================================
-   EMBEDDING → BASE64
-===================================================== */
-
-function embeddingToBase64(
-  embedding
-) {
-
-  const floatArray =
-    new Float32Array(
-      embedding
-    );
-
-
-  const bytes =
-    new Uint8Array(
-      floatArray.buffer
-    );
-
-
-  let binary =
-    '';
-
-
-  const chunkSize =
-    8192;
-
-
-  for (
-    let i = 0;
-    i < bytes.length;
-    i += chunkSize
-  ) {
-
-    binary += String.fromCharCode.apply(
-      null,
-      bytes.subarray(
-        i,
-        Math.min(
-          i + chunkSize,
-          bytes.length
-        )
-      )
-    );
-
-  }
-
-
-  return btoa(
-    binary
-  );
-
-}
-
-
-/* =====================================================
-   CHECK DUPLICATE FACE
-===================================================== */
-
-async function checkDuplicateFace() {
-
-  if (
-    !currentEmbedding
-  ) {
-
-    return;
-
-  }
-
-
-  checking =
-    true;
-
-
-  setStatus(
-    'embeddingStatus',
-    'ĐANG KIỂM TRA',
-    'warning'
-  );
-
-
-  /*
-   * LƯU Ý:
-   *
-   * API checkDuplicate sẽ được thêm
-   * vào Apps Script để không ghi điểm danh.
-   */
-
-  const base64 =
-    embeddingToBase64(
-      currentEmbedding
-    );
-
-
-  const callbackName =
-    'faceCheck_' +
-    Date.now();
-
-
-  const url =
-    API_URL +
-    '?action=checkDuplicate' +
-    '&embedding=' +
-    encodeURIComponent(
-      base64
-    ) +
-    '&callback=' +
-    callbackName;
-
-
-  try {
-
-    const result =
-      await jsonpRequest(
-        url,
-        callbackName
-      );
-
-
-    checking =
-      false;
-
-
-    if (
-      result &&
-      result.duplicate
-    ) {
-
-      /*
-       * FACE ĐÃ TỒN TẠI
-       */
-
-      document
-        .getElementById(
-          'saveBtn'
-        )
-        .disabled =
-        true;
-
-
-      setStatus(
-        'embeddingStatus',
-        'ĐÃ TỒN TẠI',
-        'error'
-      );
-
-
-      document
-        .getElementById(
-          'faceIdInfo'
-        )
-        .textContent =
-        '❌ Face ID này đã được đăng ký cho người khác';
-
-
-      const emp =
-        result.existingEmployee;
-
-
-      showResult(
-
-        '🔴 FACE ID ĐÃ TỒN TẠI',
-
-        `
-          Khuôn mặt này đã được đăng ký trước đó.<br><br>
-
-          <b>HỌ VÀ TÊN:</b>
-          ${escapeHtml(
-            emp.hoTen
-          )}<br>
-
-          <b>KIRA:</b>
-          ${escapeHtml(
-            emp.ngheDanh
-          )}<br>
-
-          <b>NHÓM:</b>
-          ${escapeHtml(
-            emp.nhom
-          )}
-        `,
-
-        (
-          Number(
-            emp.similarityPercent
-          ).toFixed(2)
-        ) + '%',
-
-        'duplicate'
-
-      );
-
-
-      return;
-
-    }
-
-
-    /*
-     * FACE MỚI
-     */
-
-    setStatus(
-      'embeddingStatus',
-      'FACE MỚI',
-      'ok'
-    );
-
-
-    document
-      .getElementById(
-        'faceIdInfo'
-      )
-      .textContent =
-      '✅ Face ID chưa tồn tại — có thể đăng ký';
-
-
-    document
-      .getElementById(
-        'saveBtn'
-      )
-      .disabled =
-      false;
-
-
-    showResult(
-
-      '🟢 FACE ID HỢP LỆ',
-
-      'Khuôn mặt chưa được đăng ký cho nhân sự khác.<br>Có thể tiến hành lưu.',
-
-      '',
-
-      'success'
-
-    );
-
-
-  } catch (error) {
-
-    checking =
-      false;
-
-
-    console.error(
-      error
-    );
-
-
-    setStatus(
-      'embeddingStatus',
-      'LỖI',
-      'error'
-    );
-
-
-    document
-      .getElementById(
-        'saveBtn'
-      )
-      .disabled =
-      true;
-
-
-    showResult(
-
-      '⚠️ KHÔNG KIỂM TRA ĐƯỢC FACE ID',
-
-      'Không thể kết nối máy chủ kiểm tra Face ID.<br>Để đảm bảo an toàn, hệ thống không cho phép lưu.',
-
-      '',
-
-      'duplicate'
-
-    );
-
-  }
-
-}
-
-
-/* =====================================================
-   JSONP
-===================================================== */
-
-function jsonpRequest(
-  url,
-  callbackName
-) {
-
-  return new Promise(
-    function(resolve, reject) {
-
-      const script =
-        document.createElement(
-          'script'
-        );
-
-
-      const timeout =
-        setTimeout(
-          function() {
-
-            cleanup();
-
-            reject(
-              new Error(
-                'API timeout'
-              )
-            );
-
-          },
-          15000
-        );
-
-
-      window[
-        callbackName
-      ] =
-        function(data) {
-
-          cleanup();
-
-          resolve(data);
-
-        };
-
-
-      function cleanup() {
-
-        clearTimeout(
-          timeout
-        );
-
-
-        try {
-
-          delete window[
-            callbackName
-          ];
-
-        } catch (e) {
-
-          window[
-            callbackName
-          ] =
-          undefined;
-
-        }
-
-
-        if (
-          script.parentNode
-        ) {
-
-          script.parentNode
-            .removeChild(
-              script
-            );
-
-        }
-
-      }
-
-
-      script.onerror =
-        function() {
-
-          cleanup();
-
-          reject(
-            new Error(
-              'API error'
-            )
-          );
-
-        };
-
-
-      script.src =
-        url;
-
-
-      document
-        .head
-        .appendChild(
-          script
-        );
-
-    }
-  );
-
-}
-
-
-/* =====================================================
-   SAVE EMPLOYEE
-===================================================== */
-
-async function saveEmployee() {
-
-  /*
-   * Kiểm tra thông tin
-   */
-
-  const hoTen =
-    document
-      .getElementById(
-        'hoTen'
-      )
-      .value
-      .trim();
-
-
-  const ngheDanh =
-    document
-      .getElementById(
-        'ngheDanh'
-      )
-      .value
-      .trim();
-
-
-  const nhom =
-    document
-      .getElementById(
-        'nhom'
-      )
-      .value
-      .trim();
-
-
-  if (!hoTen) {
-
-    alert(
-      'Vui lòng nhập HỌ VÀ TÊN.'
-    );
-
-    return;
-
-  }
-
-
-  if (!ngheDanh) {
-
-    alert(
-      'Vui lòng nhập NGHỆ DANH / KIRA.'
-    );
-
-    return;
-
-  }
-
-
-  if (!nhom) {
-
-    alert(
-      'Vui lòng nhập NHÓM.'
-    );
-
-    return;
-
-  }
-
-
-  if (
-    !currentEmbedding ||
-    currentEmbedding.length !== 512
-  ) {
-
-    alert(
-      'Chưa có Face ID 512D.'
-    );
-
-    return;
-
-  }
-
-
-  if (!livenessPassed) {
-
-    alert(
-      'Liveness chưa đạt.'
-    );
-
-    return;
-
-  }
-
-
-
-  /*
-   * KHÓA NÚT
-   */
-
-  const saveBtn =
-    document
-      .getElementById(
-        'saveBtn'
-      );
-
-
-  saveBtn.disabled =
-    true;
-
-
-  saveBtn.textContent =
-    'ĐANG LƯU...';
-
-
-
-  /*
-   * Tạo Base64
-   */
-
-  const faceId =
-    embeddingToBase64(
-      currentEmbedding
-    );
-
-
-
-  /*
-   * Dùng form POST
-   * tới Apps Script.
-   */
-
-  const iframe =
-    document.createElement(
-      'iframe'
-    );
-
-
-  iframe.name =
-    'saveFaceFrame_' +
-    Date.now();
-
-
-  iframe.style.display =
-    'none';
-
-
-  document.body
-    .appendChild(
-      iframe
-    );
-
-
-  const form =
-    document.createElement(
-      'form'
-    );
-
-
-  form.method =
-    'POST';
-
-
-  form.action =
-    API_URL;
-
-
-  form.target =
-    iframe.name;
-
-
-  form.style.display =
-    'none';
-
-
-  addHidden(
-    form,
-    'action',
-    'saveFace'
-  );
-
-
-  addHidden(
-    form,
-    'hoTen',
-    hoTen
-  );
-
-
-  addHidden(
-    form,
-    'ngheDanh',
-    ngheDanh
-  );
-
-
-  addHidden(
-    form,
-    'nhom',
-    nhom
-  );
-
-
-  addHidden(
-    form,
-    'faceId',
-    faceId
-  );
-
-
-  document.body
-    .appendChild(
-      form
-    );
-
-
-  form.submit();
-
-
-
-  /*
-   * Vì POST cross-origin sử dụng iframe,
-   * không đọc trực tiếp response.
-   *
-   * Server vẫn kiểm tra duplicate lần cuối.
-   */
-
-  setTimeout(
-    function() {
-
-      alert(
-        'Đã gửi yêu cầu đăng ký Face ID lên hệ thống.\n\n' +
-        'Nếu Face ID trùng, server sẽ tự động TỪ CHỐI lưu.'
-      );
-
-
-      saveBtn.textContent =
-        'LƯU NHÂN SỰ';
-
-
-      /*
-       * Không tự mở khóa ngay nếu
-       * vẫn còn Face ID hiện tại.
-       */
-
-      setTimeout(
-        function() {
-
-          try {
-
-            form.remove();
-
-            iframe.remove();
-
-          } catch (e) {}
-
-        },
-        3000
-      );
-
-    },
-    1200
-  );
-
-}
-
-
-/* =====================================================
-   ADD HIDDEN INPUT
-===================================================== */
-
-function addHidden(
-  form,
-  name,
-  value
-) {
-
-  const input =
-    document.createElement(
-      'input'
-    );
-
-
-  input.type =
-    'hidden';
-
-
-  input.name =
-    name;
-
-
-  input.value =
-    value;
-
-
-  form.appendChild(
-    input
-  );
-
-}
-
-
-/* =====================================================
-   RESET
-===================================================== */
-
-function resetForm() {
-
-  document
-    .getElementById(
-      'hoTen'
-    )
-    .value =
-    '';
-
-
-  document
-    .getElementById(
-      'ngheDanh'
-    )
-    .value =
-    '';
-
-
-  document
-    .getElementById(
-      'nhom'
-    )
-    .value =
-    '';
-
-
-  currentEmbedding =
-    null;
-
-
-  faceDetected =
-    false;
-
-
-  livenessPassed =
-    false;
-
-
-  checking =
-    false;
-
-
-  document
-    .getElementById(
-      'saveBtn'
-    )
-    .disabled =
-    true;
-
-
-  document
-    .getElementById(
-      'faceIdInfo'
-    )
-    .textContent =
-    'Chưa quét khuôn mặt';
-
-
-  setStatus(
-    'embeddingStatus',
-    'CHƯA CÓ',
-    'warning'
-  );
-
-
-  setStatus(
-    'livenessStatus',
-    'CHƯA ĐẠT',
-    'warning'
-  );
-
-
-  hideResult();
-
-}
-
-
-/* =====================================================
-   ESCAPE HTML
-===================================================== */
-
-function escapeHtml(
-  value
-) {
-
-  return String(
-    value || ''
-  )
-    .replace(
-      /&/g,
-      '&amp;'
-    )
-    .replace(
-      /</g,
-      '&lt;'
-    )
-    .replace(
-      />/g,
-      '&gt;'
-    )
-    .replace(
-      /"/g,
-      '&quot;'
-    )
-    .replace(
-      /'/g,
-      '&#039;'
-    );
-
-}
-
-
-/* =====================================================
-   START
-===================================================== */
-
-window.addEventListener(
-  'beforeunload',
-  function() {
-
-    stopCamera();
-
-  }
-);
-
+startBtn.addEventListener('click',startCamera);
+stopBtn.addEventListener('click',stopCamera);
+registerBtn.addEventListener('click',saveRegistration);
+
+loadModels();
 </script>
-
 </body>
 </html>
