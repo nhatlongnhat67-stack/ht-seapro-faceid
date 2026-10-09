@@ -1,578 +1,875 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HT SEAPRO - ĐIỂM DANH</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#061522">
+<title>HT SEAPRO Face ID V2</title>
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.0/dist/ort.min.js"></script>
 <style>
 *{box-sizing:border-box}
-body{
-    margin:0;
-    min-height:100vh;
-    background:radial-gradient(circle at top,#123b5c 0%,#061522 45%,#02080e 100%);
-    color:#fff;
-    font-family:Arial,sans-serif;
-}
-.container{width:min(1000px,94%);margin:auto;padding:25px 0 40px}
-.header{text-align:center;margin-bottom:20px}
-.header h1{margin:0;font-size:34px;font-weight:900;letter-spacing:2px}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#123b5c 0%,#061522 45%,#02080e 100%);color:#fff;font-family:Arial,sans-serif}
+.container{width:min(1000px,94%);margin:auto;padding:20px 0 28px}
+.header{text-align:center;margin-bottom:14px}
+.header h1{margin:0;font-size:clamp(20px,4vw,34px);font-weight:900;letter-spacing:1px}
 .header h1 span{color:#20a9ff}
-.header p{margin:8px 0 0;color:#8bb9d5;font-size:15px;letter-spacing:1px}
-.card{background:rgba(5,18,30,.97);border:1px solid #214c69;border-radius:24px;padding:20px;box-shadow:0 20px 70px rgba(0,0,0,.55)}
-.title{text-align:center;font-size:25px;font-weight:800;margin-bottom:18px}
-.camera-box{position:relative;width:100%;max-width:850px;margin:auto;background:#000;border-radius:18px;overflow:hidden;border:2px solid #1d577c}
-#video{display:block;width:100%;height:auto;transform:scaleX(-1);background:#000}
+.header p{margin:6px 0;color:#8bb9d5;font-size:13px;letter-spacing:1px}
+.card{background:rgba(5,18,30,.97);border:1px solid #214c69;border-radius:20px;padding:16px;box-shadow:0 20px 70px rgba(0,0,0,.45)}
+.title{text-align:center;font-size:clamp(18px,3vw,25px);font-weight:800;margin-bottom:14px}
+.camera-box{position:relative;width:100%;max-width:850px;margin:auto;background:#000;border-radius:16px;overflow:hidden;border:2px solid #1d577c}
+#video{display:block;width:100%;height:auto;min-height:220px;max-height:65vh;object-fit:cover;transform:scaleX(-1);background:#000}
 #canvas{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);pointer-events:none}
-.status{max-width:850px;margin:15px auto 10px;padding:14px;text-align:center;border-radius:12px;font-weight:bold;font-size:16px}
-.status.yellow{background:#332b08;border:1px solid #806b18;color:#ffd83d}
-.status.green{background:#062919;border:1px solid #16864d;color:#00ff75}
-.status.red{background:#330b0b;border:1px solid #8d2525;color:#ff6565}
-.challenge{max-width:850px;margin:10px auto;padding:15px;border-radius:12px;background:#0a1c2b;border:1px solid #244d68;text-align:center;color:#ffd43b;font-weight:bold;font-size:17px}
-.badges{max-width:850px;margin:15px auto;display:flex;justify-content:center;flex-wrap:wrap;gap:8px}
-.badge{background:#071a27;border:1px solid #24516d;color:#a9d8f5;padding:9px 13px;border-radius:30px;font-size:13px}
+.status,.challenge{max-width:850px;margin:10px auto;padding:12px;border-radius:12px;text-align:center;font-weight:bold;font-size:15px}
+.status{background:#332b08;border:1px solid #806b18;color:#ffd83d}
+.status.green{background:#062919;border-color:#16864d;color:#00ff75}
+.status.red{background:#330b0b;border-color:#8d2525;color:#ff6565}
+.challenge{background:#0a1c2b;border:1px solid #244d68;color:#ffd43b}
+.badges{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin:12px auto}
+.badge{background:#071a27;border:1px solid #24516d;color:#a9d8f5;padding:8px 11px;border-radius:30px;font-size:12px}
 .badge b{color:#00ff75}
-.buttons{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:18px 0}
-button{border:0;border-radius:12px;padding:14px 25px;font-size:16px;font-weight:800;cursor:pointer}
-button:disabled{opacity:.45;cursor:not-allowed}
+.buttons{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin:14px 0 4px}
+button{border:0;border-radius:11px;padding:12px 20px;font-size:15px;font-weight:800;cursor:pointer}
 .start{background:#087fda;color:white}
 .stop{background:#293b4b;color:white}
-.result{display:none;max-width:700px;margin:20px auto 0;padding:25px;text-align:center;border-radius:18px;background:linear-gradient(135deg,rgba(4,55,30,.96),rgba(3,28,18,.96));border:1px solid #1ba85e}
-.result.show{display:block}
-.success-title{color:#00ff75;font-size:18px;font-weight:bold}
-.nickname{color:#ffd43b;font-size:42px;font-weight:900;margin:10px 0}
-.name{font-size:22px;font-weight:bold}
-.group{margin-top:8px;color:#9ed1ed;font-size:17px}
-.score{margin-top:15px;color:#00ff75;font-size:20px;font-weight:bold}
-.attendance{margin-top:12px;color:#fff;font-size:18px;font-weight:bold}
-.footer{text-align:center;margin-top:18px;color:#52758e;font-size:13px}
 button[hidden]{display:none!important}
+.result{display:none;max-width:700px;margin:18px auto 0;padding:20px;text-align:center;border-radius:18px;background:linear-gradient(135deg,rgba(4,55,30,.96),rgba(3,28,18,.96));border:1px solid #1ba85e}
+.result.show{display:block}
+.success-title{color:#00ff75;font-size:16px;font-weight:bold}
+.nickname{color:#ffd43b;font-size:clamp(28px,6vw,42px);font-weight:900;margin:10px 0}
+.name{font-size:20px;font-weight:bold}
+.group{margin-top:8px;color:#9ed1ed}
+.score{margin-top:12px;color:#00ff75;font-weight:bold}
+.attendance{margin-top:10px;font-weight:bold}
+.footer{text-align:center;margin-top:14px;color:#52758e;font-size:12px}
 @media(max-width:600px){
-    .container{width:100%;padding:8px 0 12px}
-    .header{margin:0 8px 8px}
-    .header h1{font-size:clamp(18px,5vw,25px);letter-spacing:1px}
-    .header p{font-size:11px;margin-top:4px;letter-spacing:.5px}
-    .card{padding:10px;border-radius:16px}
-    .title{font-size:18px;margin-bottom:10px}
-    .camera-box{border-radius:12px}
-    .status,.challenge{margin:8px auto;padding:10px;font-size:14px}
-    .badges,.footer{display:none}
-    .buttons{margin:10px 0 2px;gap:8px}
-    button{width:100%;padding:12px 14px;font-size:14px}
-    .nickname{font-size:30px}
-    .result{padding:16px}
+  .container{width:100%;padding:8px 0}
+  .header{margin:0 8px 8px}
+  .header p{font-size:11px}
+  .card{padding:9px;border-radius:15px}
+  .title{font-size:18px;margin-bottom:9px}
+  .camera-box{border-radius:12px}
+  #video{min-height:220px;max-height:52vh}
+  .status,.challenge{padding:10px;margin:7px auto;font-size:13px}
+  .badges,.footer{display:none}
+  .buttons{margin:8px 0 2px}
+  button{width:100%;padding:12px;font-size:14px}
+  .result{padding:15px;margin-top:12px}
 }
 </style>
 </head>
 <body>
 <div class="container">
-    <div class="header">
-        <h1><span>HT SEAPRO</span> ENTERTAINMENT</h1>
-        <p>HỆ THỐNG ĐIỂM DANH FACE ID</p>
+  <header class="header">
+    <h1><span>HT SEAPRO</span> ENTERTAINMENT</h1>
+    <p>HỆ THỐNG ĐIỂM DANH FACE ID V2</p>
+  </header>
+
+  <main class="card">
+    <div class="title">📷 ĐIỂM DANH NHÂN SỰ</div>
+
+    <div class="camera-box">
+      <video id="video" autoplay muted playsinline></video>
+      <canvas id="canvas"></canvas>
     </div>
-    <div class="card">
-        <div class="title">📷 ĐIỂM DANH NHÂN SỰ</div>
-        <div class="camera-box">
-            <video id="video" autoplay muted playsinline disablepictureinpicture controlslist="nodownload noplaybackrate"></video>
-            <canvas id="canvas"></canvas>
-        </div>
-        <div id="status" class="status yellow">⏳ Đang tải hệ thống AI...</div>
-        <div id="challenge" class="challenge">Đang khởi động...</div>
-        <div class="badges">
-            <div class="badge">SCRFD: <b id="scrfdStatus">ĐANG TẢI</b></div>
-            <div class="badge">ARCFACE: <b id="arcStatus">ĐANG TẢI</b></div>
-            <div class="badge">EMBEDDING: <b id="embeddingStatus">CHƯA CÓ</b></div>
-            <div class="badge">LIVENESS: <b id="liveStatus">CHƯA XÁC THỰC</b></div>
-        </div>
-        <div class="buttons">
-            <button id="startBtn" class="start">📷 BẮT ĐẦU ĐIỂM DANH</button>
-            <button id="stopBtn" class="stop" hidden>⏹ DỪNG CAMERA</button>
-        </div>
-        <div id="result" class="result">
-            <div class="success-title">✅ NHÂN SỰ ĐƯỢC NHẬN DIỆN</div>
-            <div id="nickname" class="nickname"></div>
-            <div id="fullname" class="name"></div>
-            <div id="group" class="group"></div>
-            <div id="score" class="score"></div>
-            <div id="attendanceMessage" class="attendance"></div>
-        </div>
+
+    <div id="status" class="status">Đang tải mô hình AI…</div>
+    <div id="challenge" class="challenge">Đang chuẩn bị camera…</div>
+
+    <div class="badges">
+      <div class="badge">SCRFD: <b id="scrfdStatus">ĐANG TẢI</b></div>
+      <div class="badge">ARCFACE: <b id="arcStatus">ĐANG TẢI</b></div>
+      <div class="badge">MẪU: <b id="embeddingStatus">0/5</b></div>
+      <div class="badge">LIVENESS: <b id="liveStatus">CHƯA XÁC THỰC</b></div>
     </div>
-    <div class="footer">HT SEAPRO • FACE ID 512D • ATTENDANCE SYSTEM</div>
+
+    <div class="buttons">
+      <button id="startBtn" class="start">📷 BẮT ĐẦU ĐIỂM DANH</button>
+      <button id="stopBtn" class="stop" hidden>⏹ DỪNG CAMERA</button>
+    </div>
+
+    <section id="result" class="result">
+      <div class="success-title">✅ NHÂN SỰ ĐƯỢC NHẬN DIỆN</div>
+      <div id="nickname" class="nickname"></div>
+      <div id="fullname" class="name"></div>
+      <div id="group" class="group"></div>
+      <div id="score" class="score"></div>
+      <div id="attendanceMessage" class="attendance"></div>
+    </section>
+  </main>
+
+  <footer class="footer">HT SEAPRO • FACE ID 512D • V2 MULTI-FRAME</footer>
 </div>
+
 <script>
-const API_URL='https://script.google.com/macros/s/AKfycbzRwSD1xs75XXNwE_R51TIu_QKrKuon-aEcezM5cbqzevBSuQuhuqkYfN8Ozq_B1CR1/exec';
-const SCRFD_MODEL='./model/scrfd_500m_bnkps.onnx';
-const ARCFACE_MODEL='./model/w600k_mbf.onnx';
-const INPUT_SIZE=640;
-const FACE_SIZE=112;
-const DET_THRESHOLD=0.50;
-const STRIDES=[8,16,32];
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
 
-const video=document.getElementById('video');
-const canvas=document.getElementById('canvas');
-const ctx=canvas.getContext('2d');
-const statusBox=document.getElementById('status');
-const challenge=document.getElementById('challenge');
-const result=document.getElementById('result');
-const startBtn=document.getElementById('startBtn');
-const stopBtn=document.getElementById('stopBtn');
-const scrfdStatus=document.getElementById('scrfdStatus');
-const arcStatus=document.getElementById('arcStatus');
-const embeddingStatus=document.getElementById('embeddingStatus');
-const liveStatus=document.getElementById('liveStatus');
+const statusBox = document.getElementById('status');
+const challenge = document.getElementById('challenge');
+const result = document.getElementById('result');
 
-let scrfdSession=null;
-let arcfaceSession=null;
-let stream=null;
-let running=false;
-let processing=false;
-let identifying=false;
-let attendanceLocked=false;
-let lastIdentifyTime=0;
-let previousX=null;
-let previousY=null;
-let movementTotal=0;
-let movementFrames=0;
-let livenessPassed=false;
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const scrfdStatus = document.getElementById('scrfdStatus');
+const arcStatus = document.getElementById('arcStatus');
+const embeddingStatus = document.getElementById('embeddingStatus');
+const liveStatus = document.getElementById('liveStatus');
 
-function setStatus(text,type){
-    statusBox.className='status '+type;
-    statusBox.textContent=text;
+const API_URL = 'https://script.google.com/macros/s/AKfycbzRwSD1xs75XXNwE_R51TIu_QKrKuon-aEcezM5cbqzevBSuQuhuqkYfN8Ozq_B1CR1/exec';
+const SCRFD_MODEL = './model/scrfd_500m_bnkps.onnx';
+const ARCFACE_MODEL = './model/w600k_mbf.onnx';
+
+const INPUT_SIZE = 640;
+const FACE_SIZE = 112;
+const DET_THRESHOLD = 0.55;
+const STRIDES = [8, 16, 32];
+
+const MIN_FACE_WIDTH = 100;
+const SAMPLE_COUNT = 5;
+const SAMPLE_INTERVAL_MS = 320;
+
+const QUALITY_MIN_BRIGHTNESS = 35;
+const QUALITY_MAX_BRIGHTNESS = 225;
+const QUALITY_MIN_SHARPNESS = 12;
+
+const LANDMARK_TEMPLATE = [
+  [38.2946, 51.6963],
+  [73.5318, 51.5014],
+  [56.0252, 71.7366],
+  [41.5493, 92.3655],
+  [70.7299, 92.2041]
+];
+
+let scrfdSession = null;
+let arcfaceSession = null;
+let stream = null;
+
+let running = false;
+let processing = false;
+let identifying = false;
+let attendanceLocked = false;
+
+let previousX = null;
+let previousY = null;
+let movementTotal = 0;
+let movementFrames = 0;
+let livenessPassed = false;
+
+let embeddings = [];
+let lastSampleAt = 0;
+let lastIdentifyTime = 0;
+
+function setStatus(text, type = 'yellow') {
+  statusBox.className = 'status ' + type;
+  statusBox.textContent = text;
 }
 
-function resetLiveness(){
-    previousX=null;
-    previousY=null;
-    movementTotal=0;
-    movementFrames=0;
-    livenessPassed=false;
-    liveStatus.textContent='CHƯA XÁC THỰC';
+function resetLiveness() {
+  previousX = null;
+  previousY = null;
+  movementTotal = 0;
+  movementFrames = 0;
+  livenessPassed = false;
+  liveStatus.textContent = 'CHƯA XÁC THỰC';
 }
 
-async function loadAI(){
-    try{
-        setStatus('⏳ Đang tải SCRFD...','yellow');
-        scrfdSession=await ort.InferenceSession.create(SCRFD_MODEL,{executionProviders:['wasm']});
-        scrfdStatus.textContent='HOẠT ĐỘNG';
-
-        setStatus('⏳ Đang tải ArcFace...','yellow');
-        arcfaceSession=await ort.InferenceSession.create(ARCFACE_MODEL,{executionProviders:['wasm']});
-        arcStatus.textContent='HOẠT ĐỘNG';
-
-        setStatus('✅ AI SẴN SÀNG','green');
-        challenge.textContent='Đang tự động khởi động camera...';
-        await startCamera();
-    }catch(error){
-        console.error(error);
-        setStatus('❌ Lỗi tải AI: '+error.message,'red');
-        challenge.textContent='Không thể tải mô hình AI.';
-    }
+function resetSamples() {
+  embeddings = [];
+  lastSampleAt = 0;
+  embeddingStatus.textContent = '0/' + SAMPLE_COUNT;
 }
 
-async function startCamera(){
-    if(!scrfdSession||!arcfaceSession){
-        setStatus('⏳ AI chưa tải xong.','yellow');
-        return;
-    }
-    if(running)return;
+function findOutput(outputs, needles) {
+  const keys = Object.keys(outputs);
+  const arr = Array.isArray(needles) ? needles : [needles];
 
-    try{
-        stream=await navigator.mediaDevices.getUserMedia({
-            video:{
-                facingMode:'user',
-                width:{ideal:1280},
-                height:{ideal:720}
-            },
-            audio:false
-        });
-
-        video.srcObject=stream;
-        await video.play();
-
-        running=true;
-        startBtn.hidden=true;
-        stopBtn.hidden=false;
-        processing=false;
-        identifying=false;
-        attendanceLocked=false;
-        lastIdentifyTime=0;
-
-        resetLiveness();
-        result.classList.remove('show');
-        embeddingStatus.textContent='CHƯA CÓ';
-
-        setStatus('🟢 CAMERA ĐANG HOẠT ĐỘNG','green');
-        challenge.textContent='🔐 Đưa khuôn mặt vào giữa camera';
-        detectLoop();
-    }catch(error){
-        console.error(error);
-        startBtn.hidden=false;
-        stopBtn.hidden=true;
-        setStatus('❌ Không mở được camera: '+error.message,'red');
-        challenge.textContent='Hãy cho phép truy cập camera hoặc bấm BẮT ĐẦU ĐIỂM DANH để thử lại.';
-    }
+  for (const needle of arr) {
+    const key = keys.find(x =>
+      x.toLowerCase().includes(String(needle).toLowerCase())
+    );
+    if (key) return outputs[key];
+  }
+  return null;
 }
 
-function stopCamera(){
-    running=false;
-    startBtn.hidden=false;
-    stopBtn.hidden=true;
-    processing=false;
-    identifying=false;
+async function loadModels() {
+  try {
+    setStatus('Đang tải mô hình phát hiện khuôn mặt…');
 
-    if(stream){
-        stream.getTracks().forEach(track=>track.stop());
-        stream=null;
-    }
+    scrfdSession = await ort.InferenceSession.create(
+      SCRFD_MODEL,
+      { executionProviders: ['wasm'] }
+    );
+    scrfdStatus.textContent = 'HOẠT ĐỘNG';
 
-    video.srcObject=null;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    setStatus('Đang tải mô hình nhận diện…');
+
+    arcfaceSession = await ort.InferenceSession.create(
+      ARCFACE_MODEL,
+      { executionProviders: ['wasm'] }
+    );
+    arcStatus.textContent = 'HOẠT ĐỘNG';
+
+    setStatus('AI sẵn sàng. Đang mở camera…', 'green');
+    challenge.textContent = 'Nếu trình duyệt hỏi quyền camera, hãy chọn Cho phép.';
+    await startCamera();
+
+  } catch (error) {
+    console.error(error);
+    setStatus('Không tải được mô hình AI: ' + error.message, 'red');
+    challenge.textContent = 'Kiểm tra thư mục model và kết nối mạng rồi tải lại trang.';
+  }
+}
+
+async function startCamera() {
+  if (running) return;
+
+  if (!scrfdSession || !arcfaceSession) {
+    setStatus('AI chưa tải xong.');
+    return;
+  }
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    setStatus('Trình duyệt không hỗ trợ camera hoặc trang chưa chạy qua HTTPS.', 'red');
+    return;
+  }
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        facingMode: { ideal: 'user' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    });
+
+    video.srcObject = stream;
+    await video.play();
+
+    running = true;
+    processing = false;
+    identifying = false;
+    attendanceLocked = false;
+
+    startBtn.hidden = true;
+    stopBtn.hidden = false;
+    result.classList.remove('show');
+
     resetLiveness();
-    challenge.textContent='Camera đã dừng.';
+    resetSamples();
+
+    setStatus('Camera đang hoạt động', 'green');
+    challenge.textContent = 'Đưa mặt vào giữa khung hình và di chuyển đầu nhẹ theo hướng dẫn.';
+
+    detectLoop();
+
+  } catch (error) {
+    console.error(error);
+    startBtn.hidden = false;
+    stopBtn.hidden = true;
+    setStatus('Không mở được camera: ' + error.message, 'red');
+    challenge.textContent = 'Cho phép quyền camera trên trình duyệt rồi bấm BẮT ĐẦU ĐIỂM DANH.';
+  }
 }
 
-function getFrame(){
-    const c=document.createElement('canvas');
-    c.width=video.videoWidth;
-    c.height=video.videoHeight;
-    c.getContext('2d').drawImage(video,0,0,c.width,c.height);
-    return c;
+function stopCamera() {
+  running = false;
+  processing = false;
+  identifying = false;
+
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+    stream = null;
+  }
+
+  video.srcObject = null;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  startBtn.hidden = false;
+  stopBtn.hidden = true;
+
+  resetLiveness();
+  resetSamples();
+
+  challenge.textContent = 'Camera đã dừng.';
 }
 
-function letterbox(source,size){
-    const scale=Math.min(size/source.width,size/source.height);
-    const width=Math.round(source.width*scale);
-    const height=Math.round(source.height*scale);
-    const c=document.createElement('canvas');
-    c.width=size;
-    c.height=size;
-
-    const g=c.getContext('2d');
-    g.fillStyle='rgb(127,127,127)';
-    g.fillRect(0,0,size,size);
-
-    const ox=(size-width)/2;
-    const oy=(size-height)/2;
-    g.drawImage(source,ox,oy,width,height);
-
-    return{canvas:c,scale:scale,ox:ox,oy:oy};
+function getFrame() {
+  const c = document.createElement('canvas');
+  c.width = video.videoWidth;
+  c.height = video.videoHeight;
+  c.getContext('2d').drawImage(video, 0, 0, c.width, c.height);
+  return c;
 }
 
-function imageTensor(c){
-    const image=c.getContext('2d').getImageData(0,0,c.width,c.height);
-    const area=c.width*c.height;
-    const data=new Float32Array(area*3);
+function letterbox(source, size) {
+  const scale = Math.min(size / source.width, size / source.height);
+  const width = Math.round(source.width * scale);
+  const height = Math.round(source.height * scale);
 
-    for(let i=0;i<area;i++){
-        const p=i*4;
-        data[i]=(image.data[p]-127.5)/128;
-        data[area+i]=(image.data[p+1]-127.5)/128;
-        data[area*2+i]=(image.data[p+2]-127.5)/128;
+  const c = document.createElement('canvas');
+  c.width = size;
+  c.height = size;
+
+  const g = c.getContext('2d');
+  g.fillStyle = 'rgb(127,127,127)';
+  g.fillRect(0, 0, size, size);
+
+  const ox = (size - width) / 2;
+  const oy = (size - height) / 2;
+
+  g.drawImage(source, ox, oy, width, height);
+
+  return { canvas: c, scale, ox, oy };
+}
+
+function imageTensor(c) {
+  const image = c.getContext('2d').getImageData(0, 0, c.width, c.height);
+  const area = c.width * c.height;
+  const data = new Float32Array(area * 3);
+
+  for (let i = 0; i < area; i++) {
+    const p = i * 4;
+    data[i] = (image.data[p] - 127.5) / 128;
+    data[area + i] = (image.data[p + 1] - 127.5) / 128;
+    data[area * 2 + i] = (image.data[p + 2] - 127.5) / 128;
+  }
+
+  return new ort.Tensor('float32', data, [1, 3, c.height, c.width]);
+}
+
+function iou(a, b) {
+  const x1 = Math.max(a.x1, b.x1);
+  const y1 = Math.max(a.y1, b.y1);
+  const x2 = Math.min(a.x2, b.x2);
+  const y2 = Math.min(a.y2, b.y2);
+
+  const inter = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+  const aa = Math.max(0, a.x2 - a.x1) * Math.max(0, a.y2 - a.y1);
+  const bb = Math.max(0, b.x2 - b.x1) * Math.max(0, b.y2 - b.y1);
+
+  return inter / (aa + bb - inter + 1e-6);
+}
+
+function nms(detections, threshold = 0.40) {
+  detections.sort((a, b) => b.score - a.score);
+
+  const output = [];
+
+  for (const detection of detections) {
+    if (output.every(item => iou(item, detection) < threshold)) {
+      output.push(detection);
     }
+    if (output.length >= 20) break;
+  }
 
-    return new ort.Tensor('float32',data,[1,3,c.height,c.width]);
+  return output;
 }
 
-function findOutput(outputs,name){
-    const keys=Object.keys(outputs);
-    const key=keys.find(k=>k.toLowerCase().includes(name.toLowerCase()));
-    return key?outputs[key]:null;
-}
+function decodeSCRFD(outputs) {
+  const detections = [];
 
-function decodeSCRFD(outputs){
-    const detections=[];
+  for (const stride of STRIDES) {
+    const scoreT = findOutput(outputs, ['score_' + stride, 'scores_' + stride]);
+    const bboxT = findOutput(outputs, ['bbox_' + stride, 'boxes_' + stride]);
+    const kpsT = findOutput(outputs, ['kps_' + stride, 'landmark_' + stride, 'keypoint_' + stride]);
 
-    for(const stride of STRIDES){
-        const score=findOutput(outputs,'score_'+stride);
-        const bbox=findOutput(outputs,'bbox_'+stride);
-        if(!score||!bbox)continue;
+    if (!scoreT || !bboxT || !kpsT) continue;
 
-        const scores=score.data;
-        const boxes=bbox.data;
-        const count=Math.min(scores.length,Math.floor(boxes.length/4));
-        const grid=Math.ceil(INPUT_SIZE/stride);
+    const scores = scoreT.data;
+    const boxes = bboxT.data;
+    const kps = kpsT.data;
 
-        for(let i=0;i<count;i++){
-            const confidence=Number(scores[i]);
-            if(confidence<DET_THRESHOLD)continue;
+    const grid = Math.ceil(INPUT_SIZE / stride);
+    const anchors = Math.max(1, Math.round(scores.length / (grid * grid)));
+    const count = Math.min(
+      scores.length,
+      Math.floor(boxes.length / 4),
+      Math.floor(kps.length / 10)
+    );
 
-            const cell=Math.floor(i/2);
-            const gx=cell%grid;
-            const gy=Math.floor(cell/grid);
-            const b=i*4;
-            if(b+3>=boxes.length)continue;
+    for (let i = 0; i < count; i++) {
+      const score = Number(scores[i]);
+      if (!Number.isFinite(score) || score < DET_THRESHOLD) continue;
 
-            const x1=gx*stride-boxes[b]*stride;
-            const y1=gy*stride-boxes[b+1]*stride;
-            const x2=gx*stride+boxes[b+2]*stride;
-            const y2=gy*stride+boxes[b+3]*stride;
+      const cell = Math.floor(i / anchors);
+      const gx = cell % grid;
+      const gy = Math.floor(cell / grid);
 
-            detections.push({score:confidence,x1:x1,y1:y1,x2:x2,y2:y2});
-        }
+      const b = i * 4;
+      const k = i * 10;
+      const cx = gx * stride;
+      const cy = gy * stride;
+
+      const face = {
+        score,
+        x1: cx - boxes[b] * stride,
+        y1: cy - boxes[b + 1] * stride,
+        x2: cx + boxes[b + 2] * stride,
+        y2: cy + boxes[b + 3] * stride,
+        landmarks: []
+      };
+
+      for (let j = 0; j < 5; j++) {
+        face.landmarks.push([
+          cx + kps[k + j * 2] * stride,
+          cy + kps[k + j * 2 + 1] * stride
+        ]);
+      }
+
+      if (face.x2 - face.x1 < 2 || face.y2 - face.y1 < 2) continue;
+
+      detections.push(face);
     }
+  }
 
-    if(!detections.length)return null;
-    detections.sort((a,b)=>b.score-a.score);
-    return detections[0];
+  if (!detections.length) return null;
+  return nms(detections)[0] || null;
 }
 
-async function detectFace(frame){
-    const lb=letterbox(frame,INPUT_SIZE);
-    const tensor=imageTensor(lb.canvas);
-    const inputName=scrfdSession.inputNames[0];
-    const outputs=await scrfdSession.run({[inputName]:tensor});
-    const face=decodeSCRFD(outputs);
+async function detectFace(frame) {
+  const lb = letterbox(frame, INPUT_SIZE);
+  const tensor = imageTensor(lb.canvas);
 
-    if(!face)return null;
+  const outputs = await scrfdSession.run({
+    [scrfdSession.inputNames[0]]: tensor
+  });
 
-    face.x1=(face.x1-lb.ox)/lb.scale;
-    face.y1=(face.y1-lb.oy)/lb.scale;
-    face.x2=(face.x2-lb.ox)/lb.scale;
-    face.y2=(face.y2-lb.oy)/lb.scale;
+  const face = decodeSCRFD(outputs);
+  if (!face) return null;
 
-    face.x1=Math.max(0,face.x1);
-    face.y1=Math.max(0,face.y1);
-    face.x2=Math.min(frame.width,face.x2);
-    face.y2=Math.min(frame.height,face.y2);
+  const unmap = p => [
+    (p[0] - lb.ox) / lb.scale,
+    (p[1] - lb.oy) / lb.scale
+  ];
 
-    return face;
+  const p1 = unmap([face.x1, face.y1]);
+  const p2 = unmap([face.x2, face.y2]);
+
+  face.x1 = Math.max(0, p1[0]);
+  face.y1 = Math.max(0, p1[1]);
+  face.x2 = Math.min(frame.width, p2[0]);
+  face.y2 = Math.min(frame.height, p2[1]);
+  face.landmarks = face.landmarks.map(unmap);
+
+  if (face.landmarks.some(p => !Number.isFinite(p[0]) || !Number.isFinite(p[1]))) {
+    return null;
+  }
+
+  return face;
 }
 
-function drawFace(face){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    if(!face)return;
+function drawFace(face) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!face) return;
 
-    ctx.strokeStyle=livenessPassed?'#00ff66':'#ffd43b';
-    ctx.lineWidth=4;
-    ctx.strokeRect(face.x1,face.y1,face.x2-face.x1,face.y2-face.y1);
+  ctx.strokeStyle = livenessPassed ? '#00ff75' : '#ffd43b';
+  ctx.lineWidth = Math.max(2, canvas.width / 400);
+  ctx.strokeRect(face.x1, face.y1, face.x2 - face.x1, face.y2 - face.y1);
+
+  for (const p of face.landmarks) {
+    ctx.fillStyle = '#00e5ff';
+    ctx.beginPath();
+    ctx.arc(p[0], p[1], Math.max(2, canvas.width / 300), 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
-function checkLiveness(face,frameWidth){
-    if(!face){
-        resetLiveness();
-        challenge.textContent='🔐 Đưa khuôn mặt vào giữa camera';
-        return false;
-    }
-
-    const centerX=(face.x1+face.x2)/2;
-    const centerY=(face.y1+face.y2)/2;
-
-    if(previousX!==null){
-        const dx=Math.abs(centerX-previousX);
-        const dy=Math.abs(centerY-previousY);
-
-        if(dx>frameWidth*0.008||dy>frameWidth*0.006){
-            movementFrames++;
-            movementTotal+=dx+dy;
-        }
-    }
-
-    previousX=centerX;
-    previousY=centerY;
-
-    const required=frameWidth*0.18;
-    const progress=Math.min(100,Math.round(movementTotal/required*100));
-
-    if(movementFrames>=6&&movementTotal>=required){
-        livenessPassed=true;
-        liveStatus.textContent='ĐẠT';
-        challenge.textContent='✅ XÁC THỰC NGƯỜI THẬT THÀNH CÔNG';
-        return true;
-    }
-
-    liveStatus.textContent=progress+'%';
-    challenge.textContent='🔐 XÁC THỰC NGƯỜI THẬT: '+progress+'% — HÃY DI CHUYỂN ĐẦU NHẸ';
+function checkLiveness(face, frameWidth) {
+  if (!face) {
+    resetLiveness();
     return false;
+  }
+
+  const cx = (face.x1 + face.x2) / 2;
+  const cy = (face.y1 + face.y2) / 2;
+
+  if (previousX !== null) {
+    const dx = Math.abs(cx - previousX);
+    const dy = Math.abs(cy - previousY);
+
+    if (dx > frameWidth * 0.004 || dy > frameWidth * 0.003) {
+      movementFrames++;
+      movementTotal += dx + dy;
+    }
+  }
+
+  previousX = cx;
+  previousY = cy;
+
+  const required = frameWidth * 0.08;
+  const progress = Math.min(100, Math.round(movementTotal / required * 100));
+
+  if (movementFrames >= 4 && movementTotal >= required) {
+    livenessPassed = true;
+    liveStatus.textContent = 'ĐẠT';
+    challenge.textContent = 'Đã phát hiện chuyển động. Giữ mặt rõ trong camera.';
+    return true;
+  }
+
+  liveStatus.textContent = progress + '%';
+  challenge.textContent = 'Xác thực chuyển động: ' + progress + '% — di chuyển đầu nhẹ.';
+  return false;
 }
 
-function cropFace(frame,face){
-    const width=face.x2-face.x1;
-    const height=face.y2-face.y1;
-    const paddingX=width*0.25;
-    const paddingY=height*0.25;
-    const x=Math.max(0,face.x1-paddingX);
-    const y=Math.max(0,face.y1-paddingY);
-    const x2=Math.min(frame.width,face.x2+paddingX);
-    const y2=Math.min(frame.height,face.y2+paddingY);
+function alignFace(frame, face) {
+  if (!face.landmarks || face.landmarks.length !== 5) {
+    throw new Error('Mô hình không trả đủ 5 điểm mốc.');
+  }
 
-    const c=document.createElement('canvas');
-    c.width=FACE_SIZE;
-    c.height=FACE_SIZE;
-    c.getContext('2d').drawImage(frame,x,y,x2-x,y2-y,0,0,FACE_SIZE,FACE_SIZE);
-    return c;
+  const src = face.landmarks;
+  const dst = LANDMARK_TEMPLATE;
+
+  let mx = 0, my = 0, ux = 0, uy = 0;
+
+  for (let i = 0; i < 5; i++) {
+    mx += src[i][0];
+    my += src[i][1];
+    ux += dst[i][0];
+    uy += dst[i][1];
+  }
+
+  mx /= 5;
+  my /= 5;
+  ux /= 5;
+  uy /= 5;
+
+  let den = 0, aa = 0, bb = 0;
+
+  for (let i = 0; i < 5; i++) {
+    const x = src[i][0] - mx;
+    const y = src[i][1] - my;
+    const u = dst[i][0] - ux;
+    const v = dst[i][1] - uy;
+
+    den += x * x + y * y;
+    aa += x * u + y * v;
+    bb += x * v - y * u;
+  }
+
+  if (den < 1e-6) {
+    throw new Error('Điểm mốc khuôn mặt không hợp lệ.');
+  }
+
+  const a = aa / den;
+  const b = bb / den;
+  const tx = ux - a * mx + b * my;
+  const ty = uy - b * mx - a * my;
+
+  const c = document.createElement('canvas');
+  c.width = FACE_SIZE;
+  c.height = FACE_SIZE;
+
+  const g = c.getContext('2d', { willReadFrequently: true });
+  g.fillStyle = '#808080';
+  g.fillRect(0, 0, FACE_SIZE, FACE_SIZE);
+
+  g.setTransform(a, b, -b, a, tx, ty);
+  g.drawImage(frame, 0, 0);
+  g.setTransform(1, 0, 0, 1, 0, 0);
+
+  return c;
 }
 
-async function createEmbedding(faceCanvas){
-    const image=faceCanvas.getContext('2d').getImageData(0,0,FACE_SIZE,FACE_SIZE);
-    const area=FACE_SIZE*FACE_SIZE;
-    const data=new Float32Array(area*3);
+function assessQuality(c, face) {
+  const w = face.x2 - face.x1;
+  const h = face.y2 - face.y1;
 
-    for(let i=0;i<area;i++){
-        const p=i*4;
-        data[i]=(image.data[p]-127.5)/127.5;
-        data[area+i]=(image.data[p+1]-127.5)/127.5;
-        data[area*2+i]=(image.data[p+2]-127.5)/127.5;
+  if (w < MIN_FACE_WIDTH || h < MIN_FACE_WIDTH * 0.85) {
+    return { ok: false, reason: 'Mặt hơi xa camera. Hãy tiến gần hơn.' };
+  }
+
+  const lm = face.landmarks;
+  const eyeDist = Math.hypot(
+    lm[0][0] - lm[1][0],
+    lm[0][1] - lm[1][1]
+  );
+
+  if (eyeDist < w * 0.18 || eyeDist > w * 0.65) {
+    return { ok: false, reason: 'Góc mặt chưa phù hợp. Hãy nhìn thẳng camera.' };
+  }
+
+  const d = c.getContext('2d', { willReadFrequently: true })
+    .getImageData(0, 0, c.width, c.height).data;
+
+  let sum = 0;
+  const gray = [];
+
+  for (let i = 0; i < d.length; i += 4) {
+    const v = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    sum += v;
+    gray.push(v);
+  }
+
+  const brightness = sum / (d.length / 4);
+
+  if (brightness < QUALITY_MIN_BRIGHTNESS || brightness > QUALITY_MAX_BRIGHTNESS) {
+    return { ok: false, reason: 'Ánh sáng chưa tốt. Hãy đứng nơi sáng đều.' };
+  }
+
+  let lapSum = 0, lapSq = 0, n = 0;
+
+  for (let y = 1; y < FACE_SIZE - 1; y++) {
+    for (let x = 1; x < FACE_SIZE - 1; x++) {
+      const i = y * FACE_SIZE + x;
+      const v = 4 * gray[i] - gray[i - 1] - gray[i + 1] -
+        gray[i - FACE_SIZE] - gray[i + FACE_SIZE];
+
+      lapSum += v;
+      lapSq += v * v;
+      n++;
     }
+  }
 
-    const tensor=new ort.Tensor('float32',data,[1,3,FACE_SIZE,FACE_SIZE]);
-    const inputName=arcfaceSession.inputNames[0];
-    const outputs=await arcfaceSession.run({[inputName]:tensor});
-    const output=outputs[arcfaceSession.outputNames[0]];
-    const embedding=new Float32Array(output.data);
+  const mean = lapSum / n;
+  const sharp = lapSq / n - mean * mean;
 
-    let norm=0;
-    for(let i=0;i<embedding.length;i++){
-        norm+=embedding[i]*embedding[i];
-    }
+  if (sharp < QUALITY_MIN_SHARPNESS) {
+    return { ok: false, reason: 'Ảnh bị mờ. Giữ điện thoại chắc và lau camera.' };
+  }
 
-    norm=Math.sqrt(norm);
-    if(!norm)return null;
-
-    for(let i=0;i<embedding.length;i++){
-        embedding[i]/=norm;
-    }
-
-    return embedding;
+  return { ok: true, brightness, sharpness: sharp };
 }
 
-function embeddingToBase64(embedding){
-    const bytes=new Uint8Array(embedding.buffer);
-    let binary='';
-    const chunk=0x8000;
+async function createEmbedding(c) {
+  const image = c.getContext('2d', { willReadFrequently: true })
+    .getImageData(0, 0, FACE_SIZE, FACE_SIZE);
 
-    for(let i=0;i<bytes.length;i+=chunk){
-        binary+=String.fromCharCode.apply(null,bytes.subarray(i,Math.min(i+chunk,bytes.length)));
-    }
+  const area = FACE_SIZE * FACE_SIZE;
+  const data = new Float32Array(area * 3);
 
-    return btoa(binary);
+  for (let i = 0; i < area; i++) {
+    const p = i * 4;
+    data[i] = (image.data[p] - 127.5) / 127.5;
+    data[area + i] = (image.data[p + 1] - 127.5) / 127.5;
+    data[area * 2 + i] = (image.data[p + 2] - 127.5) / 127.5;
+  }
+
+  const tensor = new ort.Tensor('float32', data, [1, 3, FACE_SIZE, FACE_SIZE]);
+  const outputs = await arcfaceSession.run({
+    [arcfaceSession.inputNames[0]]: tensor
+  });
+
+  const out = outputs[arcfaceSession.outputNames[0]];
+  const emb = Array.from(out.data);
+
+  return normalize(emb);
 }
 
-function identifyFace(embedding){
-    if(identifying||attendanceLocked)return;
-    if(Date.now()-lastIdentifyTime<3000)return;
+function normalize(a) {
+  const norm = Math.sqrt(a.reduce((sum, v) => sum + v * v, 0));
+  return norm ? a.map(v => v / norm) : null;
+}
 
-    identifying=true;
-    lastIdentifyTime=Date.now();
+function averageEmbeddings(items) {
+  if (!items.length) return null;
 
-    const callbackName='faceResult_'+Date.now();
+  const avg = new Array(items[0].length).fill(0);
 
-    window[callbackName]=function(data){
-        try{
-            // Không dùng ngưỡng tương đồng ở giao diện.
-            // Nếu máy chủ trả matched:true thì hiển thị kết quả.
-            if(data&&data.matched===true){
-                showAttendanceResult(data);
-            }else{
-                const score=Number(data&&data.score||0);
-                setStatus('❌ CHƯA TÌM THẤY NHÂN SỰ PHÙ HỢP'+(score>0?' — ĐỘ TƯƠNG ĐỒNG: '+(score*100).toFixed(2)+'%':''),'red');
-                challenge.textContent='Vui lòng nhìn rõ camera và thử lại.';
-            }
-        }catch(error){
-            console.error(error);
-            setStatus('❌ Lỗi xử lý kết quả.','red');
+  for (const e of items) {
+    for (let i = 0; i < avg.length; i++) {
+      avg[i] += e[i] / items.length;
+    }
+  }
+
+  return normalize(avg);
+}
+
+function embeddingToBase64(embedding) {
+  const f = new Float32Array(embedding);
+  const bytes = new Uint8Array(f.buffer);
+  let binary = '';
+
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(i, Math.min(i + 0x8000, bytes.length))
+    );
+  }
+
+  return btoa(binary);
+}
+
+function requestJSONP(params, onResult, onError) {
+  const cb = 'htFaceCb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+  let done = false;
+
+  const script = document.createElement('script');
+  const cleanup = () => {
+    try { delete window[cb]; } catch (e) {}
+    script.remove();
+  };
+
+  window[cb] = data => {
+    if (done) return;
+    done = true;
+    cleanup();
+    onResult(data);
+  };
+
+  script.onerror = () => {
+    if (done) return;
+    done = true;
+    cleanup();
+    onError(new Error('Không kết nối được Apps Script.'));
+  };
+
+  params.callback = cb;
+  script.src = API_URL + '?' + new URLSearchParams(params).toString();
+  document.body.appendChild(script);
+
+  setTimeout(() => {
+    if (done) return;
+    done = true;
+    cleanup();
+    onError(new Error('Máy chủ không phản hồi.'));
+  }, 15000);
+}
+
+function identifyFace(embedding) {
+  if (identifying || attendanceLocked) return;
+
+  identifying = true;
+  lastIdentifyTime = Date.now();
+
+  setStatus('Đang đối chiếu nhiều khung hình với dữ liệu nhân sự…');
+
+  requestJSONP({
+    action: 'identify',
+    embedding: embeddingToBase64(embedding)
+  }, data => {
+    identifying = false;
+
+    if (data && data.matched === true && data.attendanceRecorded) {
+      showAttendanceResult(data);
+      return;
+    }
+
+    result.classList.remove('show');
+
+    if (data && data.matched === true && !data.attendanceRecorded) {
+      setStatus(data.attendanceMessage || 'Đã nhận diện nhưng chưa ghi lượt mới.', 'yellow');
+      challenge.textContent = 'Kiểm tra trạng thái điểm danh trong Google Sheet.';
+      return;
+    }
+
+    const pct = Number(data && data.similarityPercent);
+
+    setStatus(
+      (data && data.message) ||
+      'Không đủ độ tin cậy để xác nhận danh tính.' +
+      (Number.isFinite(pct) ? ' Độ tương đồng: ' + pct.toFixed(2) + '%.' : ''),
+      'red'
+    );
+
+    challenge.textContent = 'Không ghi điểm danh. Hãy nhìn thẳng, đứng gần và thử lại.';
+    resetSamples();
+
+  }, error => {
+    identifying = false;
+    setStatus(error.message, 'red');
+  });
+}
+
+function showAttendanceResult(data) {
+  attendanceLocked = true;
+  result.classList.add('show');
+
+  document.getElementById('nickname').textContent = data.ngheDanh || '';
+  document.getElementById('fullname').textContent = data.hoTen || '';
+  document.getElementById('group').textContent = 'Nhóm: ' + (data.nhom || '');
+
+  document.getElementById('score').textContent =
+    'Độ tương đồng: ' +
+    Number(data.similarityPercent || Number(data.score || 0) * 100).toFixed(2) + '%';
+
+  document.getElementById('attendanceMessage').textContent = '✅ ĐIỂM DANH THÀNH CÔNG';
+
+  setStatus('ĐIỂM DANH THÀNH CÔNG', 'green');
+  challenge.textContent = 'Đã ghi nhận lượt điểm danh trong Google Sheet.';
+}
+
+async function detectLoop() {
+  if (!running) return;
+
+  if (processing) {
+    setTimeout(detectLoop, 80);
+    return;
+  }
+
+  processing = true;
+
+  try {
+    const frame = getFrame();
+
+    if (!frame.width || !frame.height) {
+      processing = false;
+      setTimeout(detectLoop, 200);
+      return;
+    }
+
+    canvas.width = frame.width;
+    canvas.height = frame.height;
+
+    const face = await detectFace(frame);
+    drawFace(face);
+
+    if (!face) {
+      resetLiveness();
+      resetSamples();
+
+      if (!attendanceLocked) {
+        setStatus('Đưa khuôn mặt vào khung camera', 'yellow');
+        challenge.textContent = 'Hãy đưa mặt vào giữa khung hình.';
+      }
+
+    } else if (!attendanceLocked && !identifying) {
+      const live = checkLiveness(face, frame.width);
+
+      if (live && Date.now() - lastSampleAt >= SAMPLE_INTERVAL_MS) {
+        const aligned = alignFace(frame, face);
+        const quality = assessQuality(aligned, face);
+
+        if (!quality.ok) {
+          challenge.textContent = quality.reason;
+          setStatus('Chất lượng ảnh chưa đạt', 'yellow');
+
+        } else {
+          const emb = await createEmbedding(aligned);
+
+          if (emb && emb.length === 512) {
+            embeddings.push(emb);
+            lastSampleAt = Date.now();
+
+            embeddingStatus.textContent = embeddings.length + '/' + SAMPLE_COUNT;
+            setStatus('Đã lấy mẫu khuôn mặt ' + embeddings.length + '/' + SAMPLE_COUNT, 'green');
+            challenge.textContent = 'Giữ mặt trong khung và hạn chế di chuyển.';
+          }
+
+          if (embeddings.length >= SAMPLE_COUNT) {
+            const avg = averageEmbeddings(embeddings);
+            embeddings = [];
+            if (avg) identifyFace(avg);
+          }
         }
+      }
+    }
 
-        identifying=false;
-        try{delete window[callbackName];}catch(e){}
-    };
+  } catch (error) {
+    console.error(error);
+    setStatus('Lỗi xử lý camera: ' + error.message, 'red');
+  }
 
-    const script=document.createElement('script');
-    script.src=API_URL+'?action=identify'+'&embedding='+encodeURIComponent(embeddingToBase64(embedding))+'&callback='+callbackName;
+  processing = false;
 
-    script.onerror=function(){
-        identifying=false;
-        setStatus('❌ Không kết nối được hệ thống điểm danh.','red');
-    };
-
-    document.body.appendChild(script);
-
-    setTimeout(function(){
-        try{script.remove();}catch(e){}
-    },10000);
+  if (running) setTimeout(detectLoop, 120);
 }
 
-function showAttendanceResult(data){
-    attendanceLocked=true;
-    const score=Number(data.score||0);
-    result.classList.add('show');
+startBtn.onclick = startCamera;
+stopBtn.onclick = stopCamera;
 
-    document.getElementById('nickname').textContent=data.ngheDanh||'';
-    document.getElementById('fullname').textContent=data.hoTen||'';
-    document.getElementById('group').textContent='Nhóm: '+(data.nhom||'');
-    document.getElementById('score').textContent='Độ tương đồng: '+(score*100).toFixed(2)+'%';
-
-    if(data.attendanceRecorded){
-        document.getElementById('attendanceMessage').textContent='✅ ĐIỂM DANH THÀNH CÔNG';
-        setStatus('✅ ĐIỂM DANH THÀNH CÔNG','green');
-        challenge.textContent='Đã ghi nhận điểm danh cho nhân sự.';
-    }else{
-        document.getElementById('attendanceMessage').textContent=data.attendanceMessage||'Đã nhận diện.';
-        setStatus(data.attendanceMessage||'Đã nhận diện.','green');
-    }
-}
-
-async function detectLoop(){
-    if(!running)return;
-
-    if(processing){
-        requestAnimationFrame(detectLoop);
-        return;
-    }
-
-    processing=true;
-
-    try{
-        const frame=getFrame();
-
-        if(!frame.width||!frame.height){
-            processing=false;
-            setTimeout(detectLoop,200);
-            return;
-        }
-
-        canvas.width=frame.width;
-        canvas.height=frame.height;
-
-        const face=await detectFace(frame);
-        drawFace(face);
-
-        if(!face){
-            embeddingStatus.textContent='CHƯA CÓ';
-            resetLiveness();
-            challenge.textContent='🔐 Đưa khuôn mặt vào giữa camera';
-        }else{
-            const live=checkLiveness(face,frame.width);
-
-            if(live&&!attendanceLocked){
-                const faceCanvas=cropFace(frame,face);
-                const embedding=await createEmbedding(faceCanvas);
-
-                if(embedding&&embedding.length===512){
-                    embeddingStatus.textContent='512D';
-
-                    if(!identifying&&!attendanceLocked){
-                        setStatus('🔎 Đang nhận diện khuôn mặt...','yellow');
-                        identifyFace(embedding);
-                    }
-                }
-            }
-        }
-    }catch(error){
-        console.error(error);
-        setStatus('❌ Lỗi: '+error.message,'red');
-    }
-
-    processing=false;
-
-    if(running){
-        setTimeout(detectLoop,200);
-    }
-}
-
-startBtn.onclick=startCamera;
-stopBtn.onclick=stopCamera;
-loadAI();
+loadModels();
 </script>
 </body>
 </html>
